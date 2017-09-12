@@ -1,0 +1,15 @@
+<table [ngClass]="classes">
+	<thead>
+		<tr>
+			<th *ngFor="let c of columns">
+				{{c.title}}
+			</th>
+		</tr>
+		</thead>
+		<tbody>
+			<tr *ngFor="let d of data; let row = index" (currentRow)="row">
+				<td *ngFor="let c of columns; let col = index" (currentCol)="col" [innerHtml]="getValue(d, c.target)"></td>
+				<!--<td *ngFor="let value of values(d); let col = index" (currnetCol)="col" [innerHtml]="value"></td>-->
+			</tr>
+	</tbody>
+</table>
