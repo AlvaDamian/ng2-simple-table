@@ -1,6 +1,6 @@
 import { BaseColumn } from './private/BaseColumn';
 
-export interface Actionscolumn extends BaseColumn {
+export interface ActionsColumn extends BaseColumn {
 
 	/**
 	* If actions columns should be displayed firts (left side).
@@ -21,5 +21,5 @@ export interface ActionsColumnForEachRow {
 	* columnNumber
 	* rowNumber
 	*/
-  callBack: (rowData: any, columnNumber: number, rowNumber: number) => string;
+  callBack: (rowData: any) => string;
 }

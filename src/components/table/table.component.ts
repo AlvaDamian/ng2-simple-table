@@ -1,5 +1,6 @@
 import { Component, Input, OnInit} from '@angular/core';
-import { Actionscolumn, ActionsColumnForEachRow, Column } from '../../shared/interfaces';
+import { Column } from '../../shared/interfaces';
+import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
 
 @Component({
 
@@ -8,81 +9,68 @@ import { Actionscolumn, ActionsColumnForEachRow, Column } from '../../shared/int
 })
 export class TableComponent implements OnInit {
 
-  @Input('data') data: Array<any>;
-  @Input('columns') columns: Array<Column>;
-  @Input('classes') classes: string|string[]|Set<string>;
-  @Input('actions') actions: Actionscolumn;
+  data: Array<any>;
+  columns: Array<Column>;
+  tableClasses: string|string[]|Set<string>;
+  caretAscClasses: string|string[]|Set<string>;
+  caretDescClasses: string|string[]|Set<string>;
 
-  currentRow: number;
-  currentCol: number;
+  private currentSort= {
+    target:null,
+    asc:false
+  };
 
-  public ngOnInit(): void {
+  @Input() settings:Ng2ST;
 
-    if (!this.actions.forEachRow) {
-      this.actions.forEachRow = new Array<ActionsColumnForEachRow>();
-    }
-
-    this.addActionsToHeader(this.columns);
+  public constructor(private cssConfiguration:Ng2STCssConfiguration) {
   }
 
-  public values(obj): Array<any> {
+  public ngOnInit():void {
 
-    let ret: Array<any> = new Array<any>();
-    let keys: Array<string> = Object.getOwnPropertyNames(obj);
+    this.data= this.settings.getData();
+    this.columns= this.settings.getColumns();
+    this.resolveCss();
 
-    for (let k of keys) {
-      ret.push(obj[k]);
-    }
 
-    this.addActionsToDataRow(ret, obj);
-    return ret;
+    this.cssConfiguration.configurationChanged.subscribe(() => {
+
+      this.resolveCss();
+    });
   }
 
-  public getValue(obj, target: string): any {
+  private resolveCss():void {
 
-    if(obj.hasOwnProperty(target))
-      return obj[target];
-
-    return null;
+    this.tableClasses= this.cssConfiguration.getTable();
+    this.caretAscClasses= this.cssConfiguration.getCaretAsc();
+    this.caretDescClasses= this.cssConfiguration.getCaretDesc();
   }
 
-  private addActionsToDataRow(row: Array<any>, originalData: any): void {
+  public getValue(obj, column): any {
 
-    if (!this.actions) {
-      return;
-    }
-
-    let actions = '';
-
-    if (this.actions.forEachRow) {
-
-      for (let call of this.actions.forEachRow) {
-
-        if (call.callBack) {
-          actions = call.callBack(originalData, this.currentCol, this.currentRow);
-        }
-      }
-    }
-
-    if (!this.actions.displayOnLeft) {
-      row.push(actions);
-    } else {
-      row.unshift(actions);
-    }
+    return this.settings.getValue(obj, column);
   }
 
-  private addActionsToHeader(header: Array<any>): void {
+  public canSort(col:Column): boolean {
+    return this.settings.getSortStrategy(col.target) != null;
+  }
 
-    if (!this.actions) {
-      return;
+  public sortByColumn($event, col:Column):void {
+
+    $event.preventDefault();
+    $event.stopPropagation();
+
+
+
+    if(this.currentSort.target != null && this.currentSort.target == col.target){
+
+      this.currentSort.asc= !this.currentSort.asc;
+    }
+    else {
+
+      this.currentSort.target= col.target;
+      this.currentSort.asc= true;
     }
 
-    let toAdd = {title: this.actions.title};
-
-    if (this.actions.displayOnLeft) {
-      header.unshift(toAdd);
-    } else {
-      header.push(toAdd);
-    }
+    this.data= this.settings.sort(this.currentSort.target, this.currentSort.asc);
   }
 }

@@ -1,15 +1,30 @@
-<table [ngClass]="classes">
+<table [ngClass]="tableClasses">
 	<thead>
 		<tr>
 			<th *ngFor="let c of columns">
-				{{c.title}}
+				<p *ngIf="canSort(c)">
+					<a href (click)="sortByColumn($event, c)">{{c.title}}</a>
+
+					<a href *ngIf="currentSort.target == c.target && currentSort.asc" (click)="sortByColumn($event, c)">
+						<i [ngClass]="caretAscClasses"></i>
+					</a>
+
+					<a href *ngIf="currentSort.target == c.target && !currentSort.asc" (click)="sortByColumn($event, c)">
+						<i [ngClass]="caretDescClasses"></i>
+					</a>
+				</p>
+
+				<p *ngIf="!canSort(c)">
+					{{c.title}}
+				</p>
 			</th>
 		</tr>
 		</thead>
 		<tbody>
-			<tr *ngFor="let d of data; let row = index" (currentRow)="row">
-				<td *ngFor="let c of columns; let col = index" (currentCol)="col" [innerHtml]="getValue(d, c.target)"></td>
-				<!--<td *ngFor="let value of values(d); let col = index" (currnetCol)="col" [innerHtml]="value"></td>-->
+			<tr *ngFor="let d of data; let row = index">
+				<td *ngFor="let c of columns; let col = index"
+				[innerHtml]="getValue(d, c)">
+				</td>
 			</tr>
 	</tbody>
 </table>
