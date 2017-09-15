@@ -21,8 +21,8 @@
 		</tr>
 		</thead>
 		<tbody>
-			<tr *ngFor="let d of data; let row = index">
-				<td *ngFor="let c of columns; let col = index"
+			<tr *ngFor="let d of data;">
+				<td *ngFor="let c of columns;"
 				[innerHtml]="getValue(d, c)">
 				</td>
 			</tr>

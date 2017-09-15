@@ -24,7 +24,6 @@ describe("Ng2SimpleTable tests", () => {
   let data:Array<any>;
   let columns:Array<Column>;
   let ng2STInstance:Ng2ST;
-  let tableClasses:string;
   let actionsColumn:ActionsColumn;
 
   let sortTarget= "name";
@@ -99,17 +98,9 @@ describe("Ng2SimpleTable tests", () => {
     	displayOnLeft: ACTIONS_ON_LEFT_SIDE
     };
 
-    tableClasses= "table table-striped table-condensed table-bordered";
 
     ng2STInstance= Ng2STFactory.basic(data, columns);
 	});
-
-	it("Should add CSS classes", () => {
-
-  	ng2STInstance.setTableClasses(tableClasses);
-
-  	expect(ng2STInstance.getTableClasses()).toBe(tableClasses)
-  });
 
   it("Should get the correct value from object in current row", () => {
 

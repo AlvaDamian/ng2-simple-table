@@ -21,5 +21,5 @@ export interface ActionsColumnForEachRow {
 	* columnNumber
 	* rowNumber
 	*/
-  callBack: (rowData: any) => string;
+  callBack: (rowData: any) => any;
 }

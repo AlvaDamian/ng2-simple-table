@@ -1,4 +1,5 @@
 import { Component, Input, OnInit} from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { Column } from '../../shared/interfaces';
 import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
 
@@ -22,8 +23,10 @@ export class TableComponent implements OnInit {
 
   @Input() settings:Ng2ST;
 
-  public constructor(private cssConfiguration:Ng2STCssConfiguration) {
-  }
+  public constructor(
+    private cssConfiguration:Ng2STCssConfiguration,
+    private domSanitizer:DomSanitizer
+  ) { }
 
   public ngOnInit():void {
 
@@ -47,7 +50,7 @@ export class TableComponent implements OnInit {
 
   public getValue(obj, column): any {
 
-    return this.settings.getValue(obj, column);
+    return this.domSanitizer.bypassSecurityTrustHtml(this.settings.getValue(obj, column));
   }
 
   public canSort(col:Column): boolean {

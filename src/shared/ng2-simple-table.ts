@@ -3,8 +3,11 @@ import { Column, ActionsColumn, ActionsColumnForEachRow, Sort } from './interfac
 
 export class Ng2ST {
 
+	private DEFAULT_ACTIONS_TARGET:string= "Ng2STActionsColumn";
+
 	private tableClasses:string|string[]|Set<string>;
 	private actions:ActionsColumn;
+	private actionsTarget:string;
 	private sortStrategies:Map<string, Sort>;
 
 	private onDataChange:EventEmitter<Array<any>>;
@@ -20,13 +23,21 @@ export class Ng2ST {
 		this.onDataChange= new EventEmitter<Array<any>>();
 	}
 
+	private resolveActionsColumnTarget(columns:Array<Column>, desiredResult:string):string {
+
+		let exists= columns.find(value => value.target == desiredResult) != null;
+
+		return !exists ? desiredResult : this.resolveActionsColumnTarget(columns, desiredResult + desiredResult);
+	}
+
 	private addActionsToHeader(header: Array<any>): void {
 
     if (!this.actions) {
       return;
     }
 
-    let toAdd = {title: this.actions.title};
+    this.actionsTarget= this.resolveActionsColumnTarget(this.columns, this.DEFAULT_ACTIONS_TARGET);
+    let toAdd = {title: this.actions.title, target: this.actionsTarget };
 
     if (this.actions.displayOnLeft) {
       header.unshift(toAdd);
@@ -35,12 +46,10 @@ export class Ng2ST {
     }
   }
 
-  private addActionsToDataRow(
-  	dataRow: Array<any>, originalData:any, row:number, column:number
-  ): void {
+  private getActions(obj:any): any {
 
     if (!this.actions) {
-      return;
+      return null;
     }
 
     let actions = '';
@@ -49,15 +58,11 @@ export class Ng2ST {
 
       for (let call of this.actions.forEachRow) {
 
-        actions += call.callBack(originalData);
+        actions += call.callBack(obj);
       }
     }
 
-    if (!this.actions.displayOnLeft) {
-      dataRow.push(actions);
-    } else {
-      dataRow.unshift(actions);
-    }
+    return actions;
   }
 
   public replaceData(data:Array<any>):void {
@@ -74,16 +79,14 @@ export class Ng2ST {
 		return this.columns;
 	}
 
-	public getTableClasses():string|string[]|Set<string> {
-
-		return this.tableClasses;
-	}
-
 	public getActionsColumn():ActionsColumn {
 		return this.actions;
 	}
 
 	public getValue(obj:any, column:Column):any {
+
+		if(column.target == this.actionsTarget)
+			return this.getActions(obj);
 
 		let target= column.target;
 
@@ -104,11 +107,6 @@ export class Ng2ST {
 			return this.sortStrategies.get(target);
 
 		return null;
-	}
-
-	public setTableClasses(classes:string|string[]|Set<string>):void {
-
-		this.tableClasses= classes;
 	}
 
 	public setActionsColumn(actions:ActionsColumn):void {

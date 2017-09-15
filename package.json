@@ -20,7 +20,8 @@
     "email": "alva.damian@yahoo.com.ar"
   },
   "keywords": [
-    "angular"
+    "angular 4.3",
+    "ng2-simple-table"
   ],
   "license": "MIT",
   "bugs": {
@@ -34,11 +35,8 @@
     }
   },
   "devDependencies": {
-    "@angular/common": "^4.0.0",
     "@angular/compiler": "^4.0.0",
     "@angular/compiler-cli": "^4.0.0",
-    "@angular/core": "^4.0.0",
-    "@angular/platform-browser": "^4.0.0",
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@compodoc/compodoc": "^1.0.0-beta.10",
     "@types/jasmine": "2.5.38",
@@ -55,8 +53,13 @@
     "karma-chrome-launcher": "~2.0.0",
     "karma-cli": "~1.0.1",
     "karma-coverage-istanbul-reporter": "^0.2.0",
+    "karma-firefox-launcher": "^1.0.1",
+    "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "~1.1.0",
     "karma-jasmine-html-reporter": "^0.2.2",
+    "karma-typescript": "^3.0.5",
+    "karma-typescript-angular2-transform": "^1.0.1",
+    "karma-typescript-preprocessor": "^0.3.1",
     "node-sass": "^4.5.2",
     "node-sass-tilde-importer": "^1.0.0",
     "node-watch": "^0.5.2",
@@ -71,5 +74,10 @@
   },
   "engines": {
     "node": ">=6.0.0"
+  },
+  "dependencies": {
+    "@angular/common": "^4.3.6",
+    "@angular/core": "^4.3.6",
+    "@angular/platform-browser": "^4.3.6"
   }
 }

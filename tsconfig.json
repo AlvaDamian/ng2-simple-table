@@ -5,11 +5,16 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "rootDir": "./src",
+    "target": "es6",
+    "typeRoots": [],
     "lib": [
-      "es2015",
+      "es6",
       "dom"
     ],
     "skipLibCheck": true,
-    "types": []
+    "types": [
+      "jasmine",
+      "node"
+    ]
   }
 }
