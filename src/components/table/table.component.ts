@@ -16,22 +16,34 @@ export class TableComponent implements OnInit {
   caretAscClasses: string|string[]|Set<string>;
   caretDescClasses: string|string[]|Set<string>;
 
-  private currentSort= {
-    target:null,
-    asc:false
+  // pagination
+  currentPage: number;
+  numberOfPages: number;
+  numberOfPagesRange: Array<number>;
+  paginationClass: string|string[]|Set<string>;
+  paginationItemClass: string|string[]|Set<string>;
+  paginationLinkClass: string|string[]|Set<string>;
+  paginationActiveItemClass: string|string[]|Set<string>;
+
+  private currentSort = {
+    target: null,
+    asc: false
   };
 
-  @Input() settings:Ng2ST;
+  @Input() settings: Ng2ST;
 
   public constructor(
-    private cssConfiguration:Ng2STCssConfiguration,
-    private domSanitizer:DomSanitizer
+    private cssConfiguration: Ng2STCssConfiguration,
+    private domSanitizer: DomSanitizer
   ) { }
 
-  public ngOnInit():void {
+  public ngOnInit(): void {
 
-    this.data= this.settings.getData();
-    this.columns= this.settings.getColumns();
+    this.data = this.settings.getData();
+    this.columns = this.settings.getColumns();
+    this.numberOfPages = this.settings.getNumberOfPages();
+    this.numberOfPagesRange = this.createRange(this.numberOfPages);
+    this.currentPage = this.settings.getPage();
     this.resolveCss();
 
 
@@ -41,11 +53,19 @@ export class TableComponent implements OnInit {
     });
   }
 
-  private resolveCss():void {
+  private resolveCss(): void {
 
-    this.tableClasses= this.cssConfiguration.getTable();
-    this.caretAscClasses= this.cssConfiguration.getCaretAsc();
-    this.caretDescClasses= this.cssConfiguration.getCaretDesc();
+    this.tableClasses = this.cssConfiguration.getTable();
+    this.caretAscClasses = this.cssConfiguration.getCaretAsc();
+    this.caretDescClasses = this.cssConfiguration.getCaretDesc();
+    this.paginationClass = this.cssConfiguration.getPagination();
+    this.paginationItemClass = this.cssConfiguration.getPaginationItem();
+    this.paginationLinkClass = this.cssConfiguration.getPaginationLink();
+    this.paginationActiveItemClass = Ng2STCssConfiguration
+                                    .joinClasses(
+                                      this.paginationItemClass,
+                                      this.cssConfiguration.getPaginationActiveItem()
+                                    );
   }
 
   public getValue(obj, column): any {
@@ -53,27 +73,67 @@ export class TableComponent implements OnInit {
     return this.domSanitizer.bypassSecurityTrustHtml(this.settings.getValue(obj, column));
   }
 
-  public canSort(col:Column): boolean {
+  public canSort(col: Column): boolean {
     return this.settings.getSortStrategy(col.target) != null;
   }
 
-  public sortByColumn($event, col:Column):void {
+  public sortByColumn($event, col: Column): void {
 
     $event.preventDefault();
     $event.stopPropagation();
 
+    if (this.currentSort.target !== null && this.currentSort.target === col.target) {
 
+      this.currentSort.asc = !this.currentSort.asc;
+    } else {
 
-    if(this.currentSort.target != null && this.currentSort.target == col.target){
-
-      this.currentSort.asc= !this.currentSort.asc;
-    }
-    else {
-
-      this.currentSort.target= col.target;
-      this.currentSort.asc= true;
+      this.currentSort.target = col.target;
+      this.currentSort.asc = true;
     }
 
-    this.data= this.settings.sort(this.currentSort.target, this.currentSort.asc);
+    this.data = this.settings.sort(this.currentSort.target, this.currentSort.asc);
+  }
+
+  public nextPage($event): void {
+
+    $event.preventDefault();
+    $event.stopPropagation();
+
+    this.changeCurrentPage(this.currentPage + 1);
+  }
+
+  public previousPage($event): void {
+
+    $event.preventDefault();
+    $event.stopPropagation();
+
+    this.changeCurrentPage(this.currentPage - 1);
+  }
+
+  public changePage($event, pageNumber: number): void {
+
+    $event.preventDefault();
+    $event.stopPropagation();
+
+    this.changeCurrentPage(pageNumber);
+  }
+
+  private changeCurrentPage(page: number): void {
+
+    if (page === 0 || page > this.numberOfPages || page === this.currentPage) {
+      return;
+    }
+
+    this.currentPage = page;
+    this.data = this.settings.setPage(this.currentPage);
+  }
+
+  private createRange(total: number): Array<number> {
+
+    let items = new Array<number>();
+    for (let i = 1; i <= total; i++) {
+       items.push(i);
+    }
+    return items;
   }
 }

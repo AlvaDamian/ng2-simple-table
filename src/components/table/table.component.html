@@ -5,11 +5,19 @@
 				<p *ngIf="canSort(c)">
 					<a href (click)="sortByColumn($event, c)">{{c.title}}</a>
 
-					<a href *ngIf="currentSort.target == c.target && currentSort.asc" (click)="sortByColumn($event, c)">
+					<a
+						href
+						*ngIf="currentSort.target == c.target && currentSort.asc"
+						(click)="sortByColumn($event, c)"
+					>
 						<i [ngClass]="caretAscClasses"></i>
 					</a>
 
-					<a href *ngIf="currentSort.target == c.target && !currentSort.asc" (click)="sortByColumn($event, c)">
+					<a
+						href
+						*ngIf="currentSort.target == c.target && !currentSort.asc"
+						(click)="sortByColumn($event, c)"
+					>
 						<i [ngClass]="caretDescClasses"></i>
 					</a>
 				</p>
@@ -27,4 +35,47 @@
 				</td>
 			</tr>
 	</tbody>
+
+	<tfoot *ngIf="numberOfPages > 1">
+		<tr>
+			<td [attr.colspan]="columns.length">
+				<nav>
+				  <ul [ngClass]="paginationClass">
+				    <li [ngClass]="paginationItemClass">
+				      <a
+				      	href
+				      	[ngClass]="paginationLinkClass"
+				      	(click)="previousPage($event)"
+				      >
+				        <span>&laquo;</span>
+				      </a>
+				    </li>
+
+				    <li
+				    	*ngFor="let i of numberOfPagesRange"
+				    	[ngClass]="i != currentPage ? paginationItemClass : paginationActiveItemClass"
+				    >
+				    	<a
+				    		href
+				    		[ngClass]="paginationLinkClass"
+				    		(click)="changePage($event, i)">
+
+				    		{{ i }}
+				    	</a>
+				    </li>
+
+				    <li [ngClass]="paginationItemClass">
+				      <a
+				      	href
+				      	[ngClass]="paginationLinkClass"
+				      	(click)="nextPage($event)"
+				      >
+				        <span>&raquo;</span>
+				      </a>
+				    </li>
+				  </ul>
+				</nav>
+			</td>
+		</tr>
+	</tfoot>
 </table>

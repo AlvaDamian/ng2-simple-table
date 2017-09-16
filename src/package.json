@@ -1,6 +1,6 @@
 {
   "name": "ng2-simple-table",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/AlvaDamian/ng2-simple-table"
@@ -10,7 +10,8 @@
     "email": "alva.damian@yahoo.com.ar"
   },
   "keywords": [
-    "angular"
+    "angular 4",
+    "ng2-simple-table"
   ],
   "license": "MIT",
   "bugs": {
@@ -22,6 +23,9 @@
   "typings": "ng2-simple-table.d.ts",
   "peerDependencies": {
     "@angular/core": "^4.0.0",
+    "@angular/common": "^4.3.6",
+    "@angular/core": "^4.3.6",
+    "@angular/platform-browser": "^4.3.6",
     "rxjs": "^5.1.0",
     "zone.js": "^0.8.4"
   }

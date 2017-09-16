@@ -1,6 +1,6 @@
 {
   "name": "ng2-simple-table",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "scripts": {
     "build": "gulp build",
     "build:watch": "gulp",
@@ -20,7 +20,7 @@
     "email": "alva.damian@yahoo.com.ar"
   },
   "keywords": [
-    "angular 4.3",
+    "angular 4",
     "ng2-simple-table"
   ],
   "license": "MIT",
@@ -35,6 +35,9 @@
     }
   },
   "devDependencies": {
+    "@angular/common": "^4.3.6",
+    "@angular/core": "^4.3.6",
+    "@angular/platform-browser": "^4.3.6",
     "@angular/compiler": "^4.0.0",
     "@angular/compiler-cli": "^4.0.0",
     "@angular/platform-browser-dynamic": "^4.0.0",
@@ -74,10 +77,5 @@
   },
   "engines": {
     "node": ">=6.0.0"
-  },
-  "dependencies": {
-    "@angular/common": "^4.3.6",
-    "@angular/core": "^4.3.6",
-    "@angular/platform-browser": "^4.3.6"
   }
 }

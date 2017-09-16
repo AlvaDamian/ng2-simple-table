@@ -3,40 +3,42 @@ import { Column, ActionsColumn, ActionsColumnForEachRow, Sort } from './interfac
 
 export class Ng2ST {
 
-	private DEFAULT_ACTIONS_TARGET:string= "Ng2STActionsColumn";
+  private DEFAULT_ACTIONS_TARGET= 'Ng2STActionsColumn';
 
-	private tableClasses:string|string[]|Set<string>;
-	private actions:ActionsColumn;
-	private actionsTarget:string;
-	private sortStrategies:Map<string, Sort>;
+  private actions: ActionsColumn;
+  private actionsTarget: string;
+  private sortStrategies: Map<string, Sort>;
+  private page: number;
+  private perPage: number;
 
-	private onDataChange:EventEmitter<Array<any>>;
+  private onDataChange: EventEmitter<Array<any>>;
 
-	public constructor(
-		private data:Array<any>,
-		private columns:Array<Column>
-	) {
+  public constructor(
+    private data: Array<any>,
+    private columns: Array<Column>
+  ) {
 
-		this.tableClasses= null;
-		this.actions= null;
-		this.sortStrategies= new Map<string, Sort>();
-		this.onDataChange= new EventEmitter<Array<any>>();
-	}
+    this.actions = null;
+    this.sortStrategies = new Map<string, Sort>();
+    this.onDataChange = new EventEmitter<Array<any>>();
+  }
 
-	private resolveActionsColumnTarget(columns:Array<Column>, desiredResult:string):string {
+  private resolveActionsColumnTarget(columns: Array<Column>, desiredResult: string): string {
 
-		let exists= columns.find(value => value.target == desiredResult) != null;
+    let exists = columns.find(value => value.target === desiredResult) != null;
 
-		return !exists ? desiredResult : this.resolveActionsColumnTarget(columns, desiredResult + desiredResult);
-	}
+    return !exists ?
+            desiredResult :
+            this.resolveActionsColumnTarget(columns, desiredResult + desiredResult);
+  }
 
-	private addActionsToHeader(header: Array<any>): void {
+  private addActionsToHeader(header: Array<any>): void {
 
     if (!this.actions) {
       return;
     }
 
-    this.actionsTarget= this.resolveActionsColumnTarget(this.columns, this.DEFAULT_ACTIONS_TARGET);
+    this.actionsTarget = this.resolveActionsColumnTarget(this.columns, this.DEFAULT_ACTIONS_TARGET);
     let toAdd = {title: this.actions.title, target: this.actionsTarget };
 
     if (this.actions.displayOnLeft) {
@@ -46,7 +48,7 @@ export class Ng2ST {
     }
   }
 
-  private getActions(obj:any): any {
+  private getActions(obj: any): any {
 
     if (!this.actions) {
       return null;
@@ -65,86 +67,139 @@ export class Ng2ST {
     return actions;
   }
 
-  public replaceData(data:Array<any>):void {
+  public replaceData(data: Array<any>): void {
 
-		this.data= data;
-	}
+    this.data = data;
+  }
 
-	public getData():Array<any> {
-		return this.data;
-	}
+  public getData(): Array<any> {
 
-	public getColumns():Array<Column> {
+    if (!this.page || !this.perPage) {
+      return this.data;
+    }
 
-		return this.columns;
-	}
+    let ret: Array<any> = new Array<any>();
 
-	public getActionsColumn():ActionsColumn {
-		return this.actions;
-	}
+    if (this.data.length - (this.page - 1) * this.perPage <= 0) {
+      return ret;
+    }
 
-	public getValue(obj:any, column:Column):any {
+    let index: number;
+    for (let i = 0; i < this.perPage; i++) {
 
-		if(column.target == this.actionsTarget)
-			return this.getActions(obj);
+      index = this.perPage * (this.page - 1) + i;
 
-		let target= column.target;
+      if (index >= this.data.length) {
+        break;
+      }
 
-		if (obj.hasOwnProperty(target)) {
+      ret.push(this.data[index]);
+    }
+
+    return ret;
+  }
+
+  public getColumns(): Array<Column> {
+
+    return this.columns;
+  }
+
+  public getActionsColumn(): ActionsColumn {
+    return this.actions;
+  }
+
+  public getValue(obj: any, column: Column): any {
+
+    let target = column.target;
+
+    if (target === this.actionsTarget) {
+      return this.getActions(obj);
+    }
+
+    if (obj.hasOwnProperty(target)) {
+
+      if (column.customValue) {
+        return column.customValue(obj[target], obj);
+      }
+
       return obj[target];
     }
 
     return null;
-	}
+  }
 
-	public getSortStrategies():Map<string, Sort> {
-		return this.sortStrategies;
-	}
+  public getSortStrategies(): Map<string, Sort> {
+    return this.sortStrategies;
+  }
 
-	public getSortStrategy(target:string):Sort {
+  public getSortStrategy(target: string): Sort {
 
-		if(this.sortStrategies.has(target))
-			return this.sortStrategies.get(target);
+    if (this.sortStrategies.has(target)) {
+      return this.sortStrategies.get(target);
+    }
 
-		return null;
-	}
+    return null;
+  }
 
-	public setActionsColumn(actions:ActionsColumn):void {
+  public setActionsColumn(actions: ActionsColumn): void {
 
-		this.actions= actions;
+    this.actions = actions;
 
-		if (this.actions && !this.actions.forEachRow) {
+    if (this.actions && !this.actions.forEachRow) {
       this.actions.forEachRow = new Array<ActionsColumnForEachRow>();
     }
 
     this.addActionsToHeader(this.columns);
-	}
+  }
 
-	public addSortStrategy(target:string, strategy:Sort, replaceIfExists:boolean = true):boolean {
+  public addSortStrategy(target: string, strategy: Sort, replaceIfExists = true): boolean {
 
-		let exists= this.sortStrategies.has(target);
+    let exists = this.sortStrategies.has(target);
 
-		if(exists && !replaceIfExists)
-			return false;
+    if (exists && !replaceIfExists) {
+      return false;
+    }
 
-		this.sortStrategies.set(target, strategy);
-		return true;
-	}
+    this.sortStrategies.set(target, strategy);
+    return true;
+  }
 
-	public sort(target:string, asc:boolean = true):Array<any> {
+  public sort(target: string, asc = true): Array<any> {
 
-		let sortStrategy= this.getSortStrategy(target);
-		let ret= new Array<any>();
+    let sortStrategy = this.getSortStrategy(target);
+    let ret = new Array<any>();
 
-		if(!sortStrategy)
-			throw new Error("Sort strategy not found.");
-		else {
-			let toUse= asc ? sortStrategy.asc : sortStrategy.desc;
-			ret= this.data.sort((arg0, arg1) => {
-				return toUse(arg0[target], arg1[target]);
-			});
-		}
+    if (!sortStrategy) {
+      throw new Error('Sort strategy not found for target "' + target + '".');
+    } else {
+      let toUse = asc ? sortStrategy.asc : sortStrategy.desc;
+      ret = this.data.sort((arg0, arg1) => toUse(arg0[target], arg1[target]));
+    }
 
-		return ret;
-	}
+    return ret;
+  }
+
+  public addPagination(initialPage: number, perPage: number): void {
+
+    this.page = initialPage;
+    this.perPage = perPage;
+  }
+
+  public getNumberOfPages(): number {
+
+    let calc = this.data.length / this.perPage;
+    let fixedValue = Math.floor(calc);
+
+    return fixedValue === calc ? fixedValue : fixedValue + 1;
+  }
+
+  public getPage(): number {
+    return this.page;
+  }
+
+  public setPage(page: number): Array<any> {
+
+    this.page = page;
+    return this.getData();
+  }
 }
