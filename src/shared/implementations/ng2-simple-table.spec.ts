@@ -1,5 +1,5 @@
-import { Ng2ST, Ng2STFactory } from './';
-import { ActionsColumn, Column, Sort } from './interfaces';
+import { Ng2ST, Ng2STFactory } from '../';
+import { ActionsColumn, Column, Sort } from '../interfaces';
 
 
 describe('Ng2SimpleTable tests', () => {
@@ -18,7 +18,7 @@ describe('Ng2SimpleTable tests', () => {
 
   let data: Array<any>;
   let columns: Array<Column>;
-  let ng2STInstance: Ng2ST;
+  let ng2STInstance: Ng2ST<Sort>;
   let actionsColumn: ActionsColumn;
   let initialPage: number;
   let perPage: number;
@@ -27,10 +27,9 @@ describe('Ng2SimpleTable tests', () => {
   let unknownTarget = 'target not used';
 
   let sort: Sort = {
-    asc: (arg0: any, arg1: any) => arg0 === arg1 ? 0 : (arg0 > arg1 ? 1 : -1)
+    asc: (arg0: any, arg1: any) => arg0 === arg1 ? 0 : (arg0 >= arg1 ? 1 : -1)
     ,
-
-    desc: (arg0: any, arg1: any) => arg0 === arg1 ? 0 : (arg0 < arg1 ? 1 : -1)
+    desc: (arg0: any, arg1: any) => arg0 === arg1 ? 0 : (arg0 <= arg1 ? 1 : -1)
   };
 
   let anotherSort: Sort = {
@@ -121,38 +120,38 @@ describe('Ng2SimpleTable tests', () => {
 
   it('Should add a new sort strategy', () => {
 
-    let sortQuantity = ng2STInstance.getSortStrategies().size;
-    ng2STInstance.addSortStrategy(sortTarget, sort);
-    let sortNewQuantity = ng2STInstance.getSortStrategies().size;
+    let hasSort = ng2STInstance.hasSortStrategy(sortTarget);
+    expect(hasSort).toBeFalsy();
 
-    expect(sortQuantity + 1).toBe(sortNewQuantity);
+    ng2STInstance.addSortStrategy(sortTarget, sort);
+    hasSort = ng2STInstance.hasSortStrategy(sortTarget);
+
+    expect(hasSort).toBeTruthy();
   });
 
   it('Should replace an existing sort strategy', () => {
 
     ng2STInstance.addSortStrategy(sortTarget, sort);
 
-    let sortQuantity = ng2STInstance.getSortStrategies().size;
-    let result = ng2STInstance.addSortStrategy(sortTarget, anotherSort);
-    let newSortQuantity = ng2STInstance.getSortStrategies().size;
+
+    ng2STInstance.addSortStrategy(sortTarget, anotherSort);
+    let result= ng2STInstance.getSortStrategy(sortTarget);
 
     expect(result).toBeTruthy();
-    expect(sortQuantity).toBe(newSortQuantity);
-    expect(ng2STInstance.getSortStrategy(sortTarget)).toBe(anotherSort);
+    expect(result).not.toBe(sort);
+    expect(result).toBe(anotherSort);
   });
 
   it('Should not add a new sort strategy if already exists one and we don\'t want to replace it',
   () => {
 
     ng2STInstance.addSortStrategy(sortTarget, sort);
+    ng2STInstance.addSortStrategy(sortTarget, anotherSort, false);
 
-    let sortQuantity = ng2STInstance.getSortStrategies().size;
-    let result = ng2STInstance.addSortStrategy(sortTarget, anotherSort, false);
-    let newSortQuantity = ng2STInstance.getSortStrategies().size;
+    let result= ng2STInstance.getSortStrategy(sortTarget);
 
-    expect(result).toBeFalsy();
-    expect(sortQuantity + 1).not.toBe(newSortQuantity);
-    expect(ng2STInstance.getSortStrategy(sortTarget)).not.toBe(anotherSort);
+    expect(result).toBe(sort);
+    expect(result).not.toBe(anotherSort);
   });
 
   it('Should return the expected sort strategy', () => {
@@ -172,24 +171,30 @@ describe('Ng2SimpleTable tests', () => {
   it('Should sort data', () => {
 
     ng2STInstance.addSortStrategy(sortTarget, sort);
-    let newData = ng2STInstance.sort(sortTarget, false);
+    ng2STInstance.sort(sortTarget, false);
 
-    let expectedData = new Array<any>(
-      { id: 6, name: UNITED_STATES },
-      { id: 5, name: SPAIN },
-      { id: 4, name: ENGLAND },
-      { id: 3, name: CHINA },
-      { id: 2, name: BRAZIL },
-      { id: 1, name: ARGENTINE }
-    );
+    ng2STInstance
+    .getData()
+    .then(d => {
 
-    expect(newData).toBeDefined();
-    expect(newData).toEqual(expectedData);
+      let expected = new Array<any>(
+        { id: 6, name: UNITED_STATES },
+        { id: 5, name: SPAIN },
+        { id: 4, name: ENGLAND },
+        { id: 3, name: CHINA },
+        { id: 2, name: BRAZIL },
+        { id: 1, name: ARGENTINE }
+      );
+
+      expect(d).toEqual(expected);
+    });
   });
 
   it('Should set pagination', () => {
 
     ng2STInstance.addPagination(initialPage, perPage);
+
+    expect(ng2STInstance.getPage()).toEqual(initialPage);
   });
 
   it('Should return the number of available pages', () => {
@@ -203,25 +208,37 @@ describe('Ng2SimpleTable tests', () => {
   it('Should return data for the current page and not more or less', () => {
 
     ng2STInstance.addPagination(initialPage, perPage);
-    let currentData: Array<any> = ng2STInstance.getData();
+    ng2STInstance
+    .getData()
+    .then(d => {
 
-    expect(currentData.length).toEqual(perPage);
+      expect(d.length).toEqual(perPage);
 
-    expect(currentData[0]).toEqual({ id: 1, name: ARGENTINE });
-    expect(currentData[1]).toEqual({ id: 2, name: BRAZIL });
-    expect(currentData[2]).toEqual({ id: 3, name: CHINA });
-    expect(currentData[3]).toEqual({ id: 4, name: ENGLAND });
+      expect(d[0]).toEqual({ id: 1, name: ARGENTINE });
+      expect(d[1]).toEqual({ id: 2, name: BRAZIL });
+      expect(d[2]).toEqual({ id: 3, name: CHINA });
+      expect(d[3]).toEqual({ id: 4, name: ENGLAND });
 
-    currentData = ng2STInstance.setPage(2);
+      ng2STInstance.setPage(2);
 
-    expect(currentData.length).toEqual(2);
+      ng2STInstance
+      .getData()
+      .then(d2 => {
 
-    expect(currentData[0]).toEqual({ id: 5, name: SPAIN });
-    expect(currentData[1]).toEqual({ id: 6, name: UNITED_STATES });
+        expect(d2.length).toEqual(2);
 
-    currentData = ng2STInstance.setPage(3);
+        expect(d2[0]).toEqual({ id: 5, name: SPAIN });
+        expect(d2[1]).toEqual({ id: 6, name: UNITED_STATES });
 
-    expect(currentData.length).toEqual(0);
+        ng2STInstance.setPage(3);
+
+        ng2STInstance
+        .getData()
+        .then(d3 => {
+          expect(d3.length).toEqual(0);
+        });
+      });
+    });
   });
 
   it('Should return data for the current page when a sorting strategy has been applied', () => {
@@ -230,20 +247,28 @@ describe('Ng2SimpleTable tests', () => {
     ng2STInstance.addPagination(initialPage, perPage);
     ng2STInstance.sort(sortTarget, false);
 
-    let currentData: Array<any> = ng2STInstance.getData();
+    ng2STInstance
+    .getData()
+    .then(d => {
 
-    expect(currentData.length).toEqual(perPage);
+      expect(d.length).toEqual(perPage);
 
-    expect(currentData[0]).toEqual({ id: 6, name: UNITED_STATES });
-    expect(currentData[1]).toEqual({ id: 5, name: SPAIN });
-    expect(currentData[2]).toEqual({ id: 4, name: ENGLAND });
-    expect(currentData[3]).toEqual({ id: 3, name: CHINA });
+      expect(d[0]).toEqual({ id: 6, name: UNITED_STATES });
+      expect(d[1]).toEqual({ id: 5, name: SPAIN });
+      expect(d[2]).toEqual({ id: 4, name: ENGLAND });
+      expect(d[3]).toEqual({ id: 3, name: CHINA });
 
-    currentData = ng2STInstance.setPage(2);
+      ng2STInstance.setPage(2);
 
-    expect(currentData.length).toEqual(2);
+      ng2STInstance
+      .getData()
+      .then(d2 => {
 
-    expect(currentData[0]).toEqual({ id: 2, name: BRAZIL });
-    expect(currentData[1]).toEqual({ id: 1, name: ARGENTINE });
+        expect(d2.length).toEqual(2);
+
+        expect(d2[0]).toEqual({ id: 2, name: BRAZIL });
+        expect(d2[1]).toEqual({ id: 1, name: ARGENTINE });
+      });
+    });
   });
 });

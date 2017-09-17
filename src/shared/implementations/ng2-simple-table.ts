@@ -1,7 +1,7 @@
 import { EventEmitter } from '@angular/core';
-import { Column, ActionsColumn, ActionsColumnForEachRow, Sort } from './interfaces';
+import { Column, ActionsColumn, ActionsColumnForEachRow, Sort, Ng2ST } from '../interfaces';
 
-export class Ng2ST {
+export class Ng2STAutonomous implements Ng2ST<Sort> {
 
   private DEFAULT_ACTIONS_TARGET= 'Ng2STActionsColumn';
 
@@ -72,16 +72,16 @@ export class Ng2ST {
     this.data = data;
   }
 
-  public getData(): Array<any> {
+  public getData(): Promise<Array<any>> {
 
     if (!this.page || !this.perPage) {
-      return this.data;
+      return new Promise((resolve) => resolve(this.data));
     }
 
     let ret: Array<any> = new Array<any>();
 
     if (this.data.length - (this.page - 1) * this.perPage <= 0) {
-      return ret;
+      return new Promise((resolve) => resolve(ret));
     }
 
     let index: number;
@@ -96,7 +96,7 @@ export class Ng2ST {
       ret.push(this.data[index]);
     }
 
-    return ret;
+    return new Promise((resolve) => resolve(ret));;
   }
 
   public getColumns(): Array<Column> {
@@ -134,16 +134,20 @@ export class Ng2ST {
 
   public getSortStrategy(target: string): Sort {
 
-    if (this.sortStrategies.has(target)) {
+    if (this.hasSortStrategy(target)) {
       return this.sortStrategies.get(target);
     }
 
     return null;
   }
 
-  public setActionsColumn(actions: ActionsColumn): void {
+  public hasSortStrategy(target: string): boolean {
+    return this.sortStrategies.has(target);
+  }
 
-    this.actions = actions;
+  public setActionsColumn(column: ActionsColumn): void {
+
+    this.actions = column;
 
     if (this.actions && !this.actions.forEachRow) {
       this.actions.forEachRow = new Array<ActionsColumnForEachRow>();
@@ -164,19 +168,16 @@ export class Ng2ST {
     return true;
   }
 
-  public sort(target: string, asc = true): Array<any> {
+  public sort(target: string, asc = true): void {
 
-    let sortStrategy = this.getSortStrategy(target);
-    let ret = new Array<any>();
-
-    if (!sortStrategy) {
-      throw new Error('Sort strategy not found for target "' + target + '".');
-    } else {
-      let toUse = asc ? sortStrategy.asc : sortStrategy.desc;
-      ret = this.data.sort((arg0, arg1) => toUse(arg0[target], arg1[target]));
+    if (!this.hasSortStrategy(target)) {
+      return;
     }
 
-    return ret;
+    let sortStrategy = this.getSortStrategy(target);
+
+    let toUse = asc ? sortStrategy.asc : sortStrategy.desc;
+    this.data = this.data.sort((arg0, arg1) => toUse(arg0[target], arg1[target]));
   }
 
   public addPagination(initialPage: number, perPage: number): void {
@@ -197,7 +198,7 @@ export class Ng2ST {
     return this.page;
   }
 
-  public setPage(page: number): Array<any> {
+  public setPage(page: number): Promise<Array<any>> {
 
     this.page = page;
     return this.getData();

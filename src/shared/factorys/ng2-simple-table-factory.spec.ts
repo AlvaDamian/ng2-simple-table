@@ -1,5 +1,6 @@
-import { Ng2STFactory, Ng2ST } from './';
-import { Column, ActionsColumn, ActionsColumnForEachRow } from './interfaces';
+import { Ng2STFactory } from './';
+import { Ng2ST } from '../interfaces';
+import { Column, ActionsColumn, ActionsColumnForEachRow, Sort } from '../interfaces';
 
 
 describe('Ng2STFactory tests', () => {
@@ -20,8 +21,8 @@ describe('Ng2STFactory tests', () => {
 
   let data: Array<any>;
   let columns: Array<Column>;
-  let ng2STBasicInstance: Ng2ST;
-  let ng2STWithActionsInstance: Ng2ST;
+  let ng2STBasicInstance: Ng2ST<Sort>;
+  let ng2STWithActionsInstance: Ng2ST<Sort>;
   let tableClasses: string;
   let actionsColumn: ActionsColumn;
 
@@ -62,7 +63,12 @@ describe('Ng2STFactory tests', () => {
 
   it('Should create a basic Ng2ST object', () => {
 
-    expect(ng2STBasicInstance.getData()).toBe(data);
+    ng2STBasicInstance
+    .getData()
+    .then(d => {
+      expect(d).toEqual(data);
+    });
+
     expect(ng2STBasicInstance.getColumns()).toBe(columns);
   });
 

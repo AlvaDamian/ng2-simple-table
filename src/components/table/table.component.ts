@@ -25,12 +25,12 @@ export class TableComponent implements OnInit {
   paginationLinkClass: string|string[]|Set<string>;
   paginationActiveItemClass: string|string[]|Set<string>;
 
-  private currentSort = {
+  currentSort = {
     target: null,
     asc: false
   };
 
-  @Input() settings: Ng2ST;
+  @Input() settings: Ng2ST<any>;
 
   public constructor(
     private cssConfiguration: Ng2STCssConfiguration,
@@ -39,13 +39,12 @@ export class TableComponent implements OnInit {
 
   public ngOnInit(): void {
 
-    this.data = this.settings.getData();
     this.columns = this.settings.getColumns();
     this.numberOfPages = this.settings.getNumberOfPages();
     this.numberOfPagesRange = this.createRange(this.numberOfPages);
     this.currentPage = this.settings.getPage();
     this.resolveCss();
-
+    this.resolveData();
 
     this.cssConfiguration.configurationChanged.subscribe(() => {
 
@@ -74,7 +73,7 @@ export class TableComponent implements OnInit {
   }
 
   public canSort(col: Column): boolean {
-    return this.settings.getSortStrategy(col.target) != null;
+    return this.settings.hasSortStrategy(col.target) != null;
   }
 
   public sortByColumn($event, col: Column): void {
@@ -91,7 +90,8 @@ export class TableComponent implements OnInit {
       this.currentSort.asc = true;
     }
 
-    this.data = this.settings.sort(this.currentSort.target, this.currentSort.asc);
+    this.settings.sort(this.currentSort.target, this.currentSort.asc);
+    this.resolveData();
   }
 
   public nextPage($event): void {
@@ -125,7 +125,8 @@ export class TableComponent implements OnInit {
     }
 
     this.currentPage = page;
-    this.data = this.settings.setPage(this.currentPage);
+    this.settings.setPage(this.currentPage);
+    this.resolveData();
   }
 
   private createRange(total: number): Array<number> {
@@ -135,5 +136,13 @@ export class TableComponent implements OnInit {
        items.push(i);
     }
     return items;
+  }
+
+  private resolveData(): void {
+    this
+    .settings
+    .getData()
+    .then(d => {this.data= d;})
+    .catch();
   }
 }
