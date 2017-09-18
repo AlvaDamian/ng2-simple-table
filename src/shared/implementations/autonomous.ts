@@ -156,12 +156,21 @@ export class Ng2STAutonomous implements Ng2ST<Sort> {
     this.addActionsToHeader(this.columns);
   }
 
-  public addSortStrategy(target: string, strategy?: Sort, replaceIfExists = true): boolean {
+  public addSortStrategy(
+    target: string | string[],
+    strategy?: Sort,
+    replaceIfExists = true
+  ): string[] {
 
-    let exists = this.sortStrategies.has(target);
+    let exists = false;
+    let ret = new Array<string>();
+    let toLoop:Array<string>;
 
-    if (exists && !replaceIfExists) {
-      return false;
+    if (typeof target === 'string') {
+      toLoop = new Array<string>();
+      toLoop.push(target);
+    } else if (Array.isArray(target)) {
+      toLoop= target;
     }
 
     if (!strategy) {
@@ -171,8 +180,21 @@ export class Ng2STAutonomous implements Ng2ST<Sort> {
       }
     }
 
-    this.sortStrategies.set(target, strategy);
-    return true;
+    toLoop
+    .forEach(t => {
+
+      exists = this.hasSortStrategy(t);
+
+      if (exists && !replaceIfExists) {
+        return;
+      }
+
+      this.sortStrategies.set(t, strategy);
+      ret.push(t);
+    });
+
+
+    return ret;
   }
 
   public sort(target: string, asc = true): void {

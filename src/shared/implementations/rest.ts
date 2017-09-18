@@ -188,15 +188,20 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
   }
 
   public addSortStrategy(
-    target: string,
+    target: string | string[],
     strategy?: Sort | RESTSort,
     replaceIfExists = true
-  ): boolean {
+  ): string[] {
 
-    let exists = this.sortStrategies.has(target);
+    let exists = false;
+    let ret = new Array<string>();
+    let toLoop:Array<string>;
 
-    if (exists && !replaceIfExists) {
-      return false;
+    if (typeof target === 'string') {
+      toLoop = new Array<string>();
+      toLoop.push(target);
+    } else if (Array.isArray(target)) {
+      toLoop= target;
     }
 
     if (!strategy) {
@@ -206,8 +211,21 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
       }
     }
 
-    this.sortStrategies.set(target, strategy);
-    return true;
+    toLoop
+    .forEach(t => {
+
+      exists = this.hasSortStrategy(t);
+
+      if (exists && !replaceIfExists) {
+        return;
+      }
+
+      this.sortStrategies.set(t, strategy);
+      ret.push(t);
+    });
+
+
+    return ret;
   }
 
   public addPagination(initialPage: number, perPage: number): void {

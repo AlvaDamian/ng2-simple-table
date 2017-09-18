@@ -75,13 +75,16 @@ export interface Ng2ST<T> {
   hasSortStrategy(target: string): boolean;
 
   /**
-  * Adds or replace a sort strategy for the target.
+  * Adds or replace a sort strategy for the target or group of targets.
+  * The same strategy will be added to all targets.
   *
-  * @param target Property by wich data should be sorted.
+  * @param target Property or group of properties by wich data should be sorted.
   * @param sortStrategy Sort strategy to use. It it is not set, a default sort strategy will be used.
   * @param replace If a sort strategy is found, replace it or not. TRUE by default.
+  *
+  * @return The list of targets that got added.
   */
-  addSortStrategy(target: string, sortStrategy?: T, replace?: boolean): void;
+  addSortStrategy(target: string | string[], sortStrategy?: T, replace?: boolean): string[];
 
   /**
   * Adds pagination.
