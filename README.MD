@@ -125,13 +125,19 @@ If you dont't want to use the global configuration for CSS, this is the HTML tem
         </p>
       </th>
     </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let d of data;">
-        <td *ngFor="let c of columns;"
-        [innerHtml]="getValue(d, c)">
-        </td>
-      </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let d of data;">
+      <td *ngFor="let c of columns;"
+      [innerHtml]="getValue(d, c)">
+      </td>
+    </tr>
+
+    <tr *ngIf="data.length == 0">
+      <td [attr.colspan]="columns.length">
+        {{ loading ? "Loading..." : "There is no data to display." }}
+      </td>
+    </tr>
   </tbody>
 
   <tfoot *ngIf="numberOfPages > 1">
@@ -181,6 +187,7 @@ If you dont't want to use the global configuration for CSS, this is the HTML tem
 
 ### Data display
 
+#### With custom data
 country-manage.component.ts
 
 ```typescript
@@ -241,7 +248,7 @@ export class CountryManageComponent {
 
   constructor() {
 
-    let table= Ng2STFactory.basic(this.data, this.cols);
+    let table= Ng2STFactory.createAutonomous(this.data, this.cols);
 
     //This will set the column "name" to be used for sorting using the given strategy.
     table.addSortStrategy("name", this.sortByNameStrategy);
@@ -259,8 +266,91 @@ export class CountryManageComponent {
   private linkEdit(countryId:number): string {
     return "/country/form/" + countryId;
   }
-
+}
 ```
+
+#### With REST api
+
+
+```typescript
+import { Component } from '@angular/core';
+import { Ng2STFactory, Ng2ST, ActionsColumn, RESTSort } from 'ng2-simple-table';
+
+@Component({
+  selector: "country-manage",
+  templateUrl: "./manage.html"
+})
+export class CountryManageComponent {
+
+  let c= new Array<Column>(
+    { title: 'Name', target: 'name' },
+    { title: 'Region', target:  'region' },
+    { title: 'Population', target: 'population' },
+    { title: 'Capital', target: 'capital' }
+  );
+
+  //Optional
+  actions:ActionsColumn= {
+    title: "Actions",
+    displayOnLeft: true,
+    forEachRow:[{callBack: (data:any) => {
+
+      let link:string= this.linkEdit(data.alpha3Code);
+      return '<a href="' + link + '"><i class="fa fa-pencil" title="edit"></i></a>';
+    }}]
+  };
+
+  /** Optional
+  * Sort strategy.
+  * "asc" and "desc" are strings to append to the query string;
+  *
+  * asc: It will be used when sorting the data in ascending order.
+  * desc: It will be used when sorting the data in descending order;
+  *
+  * Notice: This example endpoint doesn't support sorting.
+  */
+  sortByNameStrategy:Sort= {
+    asc: "sort=name_asc"
+    ,
+    desc: "sort=name_desc"
+  };
+
+  constructor() {
+
+    let url= "https://restcountries.eu/rest/v2/all?fields=name;region;population;capital;alpha3Code";
+    let table= Ng2STFactory.createREST(url, this.cols);
+
+    //This will set the column "name" to be used for sorting using the given strategy.
+    table.addSortStrategy("name", this.sortByNameStrategy);
+
+    //This will set the actions column. If it is not used, the column will not be displayed.
+    table.setActionsColumn(this.actions);
+
+    /**
+    * This will display data in pages of 15 elements.
+    * It is not used, data will be displayed in a single page.
+    *
+    * Since this endpoint doesn't support pagination and we will fetch all data,
+    * the pagination will occur anyway if we didn't set up "pageRequestParam" or
+    * "perPageRequestParam" on "createRest".
+    */
+    table.addPagination(1, 15);
+
+    this.tableSettings= table;
+  }
+
+  private linkEdit(countryId:number): string {
+    return "/country/form/" + countryId;
+  }
+}
+```
+
+#### With your own implementation
+
+Ng2ST is now an interface. Implement this with your own code and pass it as parameter
+to the "<ng2-simple-table/>" tag.
+
+#### Html
 
 manage.html
 

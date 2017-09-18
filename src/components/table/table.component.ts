@@ -143,6 +143,7 @@ export class TableComponent implements OnInit {
 
   private resolveData(): void {
     this.loading = true;
+    this.data = new Array<string>();
 
     this
     .settings

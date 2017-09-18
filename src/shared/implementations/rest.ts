@@ -195,20 +195,20 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
 
     let exists = false;
     let ret = new Array<string>();
-    let toLoop:Array<string>;
+    let toLoop: Array<string>;
 
     if (typeof target === 'string') {
       toLoop = new Array<string>();
       toLoop.push(target);
     } else if (Array.isArray(target)) {
-      toLoop= target;
+      toLoop = target;
     }
 
     if (!strategy) {
       strategy = {
         asc: (arg0, arg1) => arg0 === arg1 ? 0 : (arg0 > arg1 ? 1 : -1),
         desc: (arg0, arg1) => arg0 === arg1 ? 0 : (arg0 < arg1 ? 1 : -1)
-      }
+      };
     }
 
     toLoop
