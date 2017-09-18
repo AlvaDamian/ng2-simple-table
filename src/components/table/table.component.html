@@ -27,13 +27,19 @@
 				</p>
 			</th>
 		</tr>
-		</thead>
-		<tbody>
-			<tr *ngFor="let d of data;">
-				<td *ngFor="let c of columns;"
-				[innerHtml]="getValue(d, c)">
-				</td>
-			</tr>
+	</thead>
+	<tbody>
+		<tr *ngFor="let d of data;">
+			<td *ngFor="let c of columns;"
+			[innerHtml]="getValue(d, c)">
+			</td>
+		</tr>
+
+		<tr *ngIf="data.length == 0">
+			<td [attr.colspan]="columns.length">
+				{{ loading ? "Loading..." : "There is no data to display." }}
+			</td>
+		</tr>
 	</tbody>
 
 	<tfoot *ngIf="numberOfPages > 1">

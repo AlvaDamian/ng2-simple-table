@@ -96,7 +96,7 @@ export class Ng2STAutonomous implements Ng2ST<Sort> {
       ret.push(this.data[index]);
     }
 
-    return new Promise((resolve) => resolve(ret));;
+    return new Promise((resolve) => resolve(ret));
   }
 
   public getColumns(): Array<Column> {
@@ -156,12 +156,19 @@ export class Ng2STAutonomous implements Ng2ST<Sort> {
     this.addActionsToHeader(this.columns);
   }
 
-  public addSortStrategy(target: string, strategy: Sort, replaceIfExists = true): boolean {
+  public addSortStrategy(target: string, strategy?: Sort, replaceIfExists = true): boolean {
 
     let exists = this.sortStrategies.has(target);
 
     if (exists && !replaceIfExists) {
       return false;
+    }
+
+    if (!strategy) {
+      strategy = {
+        asc: (arg0, arg1) => arg0 === arg1 ? 0 : (arg0 > arg1 ? 1 : -1),
+        desc: (arg0, arg1) => arg0 === arg1 ? 0 : (arg0 < arg1 ? 1 : -1)
+      }
     }
 
     this.sortStrategies.set(target, strategy);

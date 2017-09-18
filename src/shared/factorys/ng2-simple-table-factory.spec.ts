@@ -50,8 +50,8 @@ describe('Ng2STFactory tests', () => {
 
     tableClasses = 'table table-striped table-condensed table-bordered';
 
-    ng2STBasicInstance = Ng2STFactory.basic(data, columns);
-    ng2STWithActionsInstance = Ng2STFactory.withActions(data, columns, actionsColumn);
+    ng2STBasicInstance = Ng2STFactory.createAutonomous(data, columns);
+    ng2STWithActionsInstance = Ng2STFactory.createAutonomous(data, columns, actionsColumn);
   });
 
   it('Should be defined', () => {

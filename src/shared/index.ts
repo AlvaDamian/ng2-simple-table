@@ -1,4 +1,4 @@
 export * from './implementations';
 export * from './factorys';
-export * from './css-configuration';
+export * from './config';
 export * from './interfaces';

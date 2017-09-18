@@ -2,7 +2,7 @@ import { Ng2ST, Ng2STFactory } from '../';
 import { ActionsColumn, Column, Sort } from '../interfaces';
 
 
-describe('Ng2SimpleTable tests', () => {
+describe('Ng2ST tests', () => {
 
   const ARGENTINE = 'Argentine';
   const BRAZIL = 'Brazil';
@@ -63,7 +63,7 @@ describe('Ng2SimpleTable tests', () => {
 
     initialPage = 1;
     perPage = 4;
-    ng2STInstance = Ng2STFactory.basic(data, columns);
+    ng2STInstance = Ng2STFactory.createAutonomous(data, columns);
   });
 
   it('Should get the correct value from object in current row', () => {
@@ -135,7 +135,7 @@ describe('Ng2SimpleTable tests', () => {
 
 
     ng2STInstance.addSortStrategy(sortTarget, anotherSort);
-    let result= ng2STInstance.getSortStrategy(sortTarget);
+    let result = ng2STInstance.getSortStrategy(sortTarget);
 
     expect(result).toBeTruthy();
     expect(result).not.toBe(sort);
@@ -148,7 +148,7 @@ describe('Ng2SimpleTable tests', () => {
     ng2STInstance.addSortStrategy(sortTarget, sort);
     ng2STInstance.addSortStrategy(sortTarget, anotherSort, false);
 
-    let result= ng2STInstance.getSortStrategy(sortTarget);
+    let result = ng2STInstance.getSortStrategy(sortTarget);
 
     expect(result).toBe(sort);
     expect(result).not.toBe(anotherSort);

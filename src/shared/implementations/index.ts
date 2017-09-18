@@ -1,1 +1,2 @@
-export * from './ng2-simple-table';
+export * from './autonomous';
+export * from './rest';

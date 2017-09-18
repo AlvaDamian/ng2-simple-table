@@ -10,6 +10,7 @@ import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
 })
 export class TableComponent implements OnInit {
 
+  loading: boolean;
   data: Array<any>;
   columns: Array<Column>;
   tableClasses: string|string[]|Set<string>;
@@ -35,13 +36,15 @@ export class TableComponent implements OnInit {
   public constructor(
     private cssConfiguration: Ng2STCssConfiguration,
     private domSanitizer: DomSanitizer
-  ) { }
+  ) {
+    this.loading = false;
+    this.data = new Array<any>();
+    this.columns = new Array<Column>();
+  }
 
   public ngOnInit(): void {
 
     this.columns = this.settings.getColumns();
-    this.numberOfPages = this.settings.getNumberOfPages();
-    this.numberOfPagesRange = this.createRange(this.numberOfPages);
     this.currentPage = this.settings.getPage();
     this.resolveCss();
     this.resolveData();
@@ -73,7 +76,7 @@ export class TableComponent implements OnInit {
   }
 
   public canSort(col: Column): boolean {
-    return this.settings.hasSortStrategy(col.target) != null;
+    return this.settings.hasSortStrategy(col.target);
   }
 
   public sortByColumn($event, col: Column): void {
@@ -139,10 +142,21 @@ export class TableComponent implements OnInit {
   }
 
   private resolveData(): void {
+    this.loading = true;
+
     this
     .settings
     .getData()
-    .then(d => {this.data= d;})
-    .catch();
+    .then(d => {
+      this.data = d;
+      this.numberOfPages = this.settings.getNumberOfPages();
+      this.numberOfPagesRange = this.createRange(this.numberOfPages);
+      this.loading = false;
+    })
+    .catch(e => {
+
+      this.loading = false;
+      console.error('An error has ocurred while trying to fetch data: ', e);
+    });
   }
 }

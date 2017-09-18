@@ -2,7 +2,7 @@
   "name": "ng2-simple-table",
   "version": "0.4.0",
   "scripts": {
-    "build": "gulp build",
+    "build": "tsc && gulp build",
     "build:watch": "gulp",
     "docs": "npm run docs:build",
     "docs:build": "compodoc -p tsconfig.json -n ng2-simple-table -d docs --hideGenerator",
@@ -35,11 +35,9 @@
     }
   },
   "devDependencies": {
-    "@angular/common": "^4.3.6",
-    "@angular/core": "^4.3.6",
-    "@angular/platform-browser": "^4.3.6",
     "@angular/compiler": "^4.0.0",
     "@angular/compiler-cli": "^4.0.0",
+    "@angular/http": "^4.4.1",
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@compodoc/compodoc": "^1.0.0-beta.10",
     "@types/jasmine": "2.5.38",
@@ -77,5 +75,12 @@
   },
   "engines": {
     "node": ">=6.0.0"
+  },
+  "dependencies": {
+    "@types/request": "^2.0.3",
+    "request": "^2.81.0",
+    "@angular/core": "^4.0.0",
+    "@angular/common": "^4.0.0",
+    "@angular/platform-browser": "^4.0.0"
   }
 }
