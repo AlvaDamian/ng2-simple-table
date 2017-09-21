@@ -1,23 +1,18 @@
 import { Ng2ST } from '../interfaces';
 import { Ng2STAutonomous, Ng2STREST } from '../implementations';
-import { Column, ActionsColumn, Sort, RESTSort } from '../interfaces';
+import { Column, Sort, RESTSort } from '../interfaces';
 
 export class Ng2STFactory {
 
   public static createAutonomous(
     data: Array<any>,
     columns: Array<Column>,
-    actions?: ActionsColumn,
     sorts?: Array<{ target: string, strategy: Sort }>,
     initialPage?: number,
     perPage?: number
   ): Ng2ST<Sort> {
 
     let ret = new Ng2STAutonomous(data, columns);
-
-    if (actions) {
-      ret.setActionsColumn(actions);
-    }
 
     if (sorts) {
       sorts.forEach(value => {

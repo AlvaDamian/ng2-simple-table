@@ -187,180 +187,302 @@ If you dont't want to use the global configuration for CSS, this is the HTML tem
 
 ### Data display
 
-#### With custom data
-country-manage.component.ts
-
-```typescript
-import { Component } from '@angular/core';
-import { Ng2STFactory, Ng2ST, ActionsColumn, Sort } from 'ng2-simple-table';
-
-@Component({
-  selector: "country-manage",
-  templateUrl: "./manage.html"
-})
-export class CountryManageComponent {
-
-  data:Array<any>= [
-    { id: 1, name: "Argentine", flag: "http://flags.fmcdn.net/data/flags/w580/ar.png" },
-    { id: 2, name: "Brazil", flag: "http://flags.fmcdn.net/data/flags/w580/br.png" },
-    { id: 3, name: "China", flag: "http://flags.fmcdn.net/data/flags/w580/cn.png" },
-    { id: 4, name: "England", flag: "http://flags.fmcdn.net/data/flags/w580/gb.png" },
-    { id: 5, name: "Spain", flag: "http://flags.fmcdn.net/data/flags/w580/es.png" },
-    { id: 6, name: "United States", flag: "http://flags.fmcdn.net/data/flags/w580/us.png" }
-  ];
-
-  /** title: Column title.
-  *   target: Property name to display.
-  *   customDisplay: Custom value to display. It will be a function that accepts the value
-  *                  for the column and the fullObject; returns "any".
-  */
-  cols:Array<Column>= [
-    { title: "ID", target: "id" },
-    { title: "Name", target: "name" }
-    { title: "Flag", target: "flag",
-    customDisplay: (value, fullObject) =>
-    "<img src=\"" + value + "\" title=\"" + fullObject.name + "\" />" }
-  ];
-
-  //Optional
-  actions:ActionsColumn= {
-    title: "Actions",
-    displayOnLeft: true,
-    forEachRow:[{callBack: (data:any) => {
-
-      let link:string= this.linkEdit(data.id);
-      return '<a href="' + link + '"><i class="fa fa-pencil" title="edit"></i></a>';
-    }}]
-  };
-
-  /** Optional
-  * Sort strategy.
-  * "asc" and "desc" are functions to be used with Array.sort();
-  *
-  * asc: It will be used when sorting the data in ascending order.
-  * desc: It will be used when sorting the data in descending order;
-  */
-  sortByNameStrategy:Sort= {
-    asc: (arg0:any, arg1:any) => arg0 == arg1 ? 0 : (arg0 >= arg1 ? 1 : -1)
-    ,
-    desc: (arg0:any, arg1:any) => arg0 == arg1 ? 0 : (arg0 <= arg1 ? 1 : -1)
-  };
-
-  constructor() {
-
-    let table= Ng2STFactory.createAutonomous(this.data, this.cols);
-
-    //This will set the column "name" to be used for sorting using the given strategy.
-    table.addSortStrategy("name", this.sortByNameStrategy);
-
-    //This will set the actions column. If it is not used, the column will not be displayed.
-    table.setActionsColumn(this.actions);
-
-    //This will display data in pages of 4 elements.
-    //It is not used, data will be displayed in a single page.
-    table.addPagination(1, 4);
-
-    this.tableSettings= table;
-  }
-
-  private linkEdit(countryId:number): string {
-    return "/country/form/" + countryId;
-  }
-}
-```
-
-#### With REST api
-
-
-```typescript
-import { Component } from '@angular/core';
-import { Ng2STFactory, Ng2ST, ActionsColumn, RESTSort } from 'ng2-simple-table';
-
-@Component({
-  selector: "country-manage",
-  templateUrl: "./manage.html"
-})
-export class CountryManageComponent {
-
-  let c= new Array<Column>(
-    { title: 'Name', target: 'name' },
-    { title: 'Region', target:  'region' },
-    { title: 'Population', target: 'population' },
-    { title: 'Capital', target: 'capital' }
-  );
-
-  //Optional
-  actions:ActionsColumn= {
-    title: "Actions",
-    displayOnLeft: true,
-    forEachRow:[{callBack: (data:any) => {
-
-      let link:string= this.linkEdit(data.alpha3Code);
-      return '<a href="' + link + '"><i class="fa fa-pencil" title="edit"></i></a>';
-    }}]
-  };
-
-  /** Optional
-  * Sort strategy.
-  * "asc" and "desc" are strings to append to the query string;
-  *
-  * asc: It will be used when sorting the data in ascending order.
-  * desc: It will be used when sorting the data in descending order;
-  *
-  * Notice: This example endpoint doesn't support sorting.
-  */
-  sortByNameStrategy:Sort= {
-    asc: "sort=name_asc"
-    ,
-    desc: "sort=name_desc"
-  };
-
-  constructor() {
-
-    let url= "https://restcountries.eu/rest/v2/all?fields=name;region;population;capital;alpha3Code";
-    let table= Ng2STFactory.createREST(url, this.cols);
-
-    //This will set the column "name" to be used for sorting using the given strategy.
-    table.addSortStrategy("name", this.sortByNameStrategy);
-
-    //This will set the actions column. If it is not used, the column will not be displayed.
-    table.setActionsColumn(this.actions);
-
-    /**
-    * This will display data in pages of 15 elements.
-    * It is not used, data will be displayed in a single page.
-    *
-    * Since this endpoint doesn't support pagination and we will fetch all data,
-    * the pagination will occur anyway if we didn't set up "pageRequestParam" or
-    * "perPageRequestParam" on "createRest".
-    */
-    table.addPagination(1, 15);
-
-    this.tableSettings= table;
-  }
-
-  private linkEdit(countryId:number): string {
-    return "/country/form/" + countryId;
-  }
-}
-```
-
-#### With your own implementation
-
-Ng2ST is now an interface. Implement this with your own code and pass it as parameter
-to the "<ng2-simple-table/>" tag.
-
-#### Html
-
-manage.html
+All examples uses this HTML
 
 ```xml
-<ng2-simple-table [settings]="tableSettings"></ng2-simple-table>
+<div>
+  <ng2-simple-table [settings]="tableSettings"></ng2-simple-table>
+</div>
+
+<div>
+  <ng2-simple-table [settings]="tableSettingsRest"></ng2-simple-table>
+</div>
 ```
+
+#### Basic implementation
+
+This is the most basic implementation:
+ - No filters.
+ - No sort.
+ - No pagination.
+ - No custom columns.
+
+```typescript
+import { Component } from '@angular/core';
+import { Ng2STFactory, Ng2ST, Sort, RESTSort } from 'ng2-simple-table';
+
+@Component({
+  .....
+})
+export class YourClassName {
+
+  columns:Array<Column>= [
+    { title: "ID", target: "alpha3Code" },
+    { title: "Name", target: "name" },
+    { title: "Region", target: "region" },
+    { title: "Population", target: "population" },
+    { title: "Capital", target: "capital" }
+  ];
+
+  tableSettings: Ng2ST<Sort>;
+  tableSettingsRest: Ng2ST<RESTSort>;
+
+  constructor() {
+
+
+    let data= [/* some hardcoded data */];
+    let url= "https://restcountries.eu/rest/v2/" +
+    "all?fields=name;region;population;capital;alpha3Code";
+
+    this.tableSettings= Ng2STFactory.createAutonomous(data, this.columns);
+    this.tableSettingsRest= Ng2STFactory.createREST(url, this.columns);
+  }
+}
+```
+
+#### Add sort strategies
+
+There are two forms to implement sorting for a column:
+ - From column definition.
+ - Using "addSortStrategy" from the object created by the factory.
+
+```typescript
+/*
+* From column definition
+*
+* Add "sort: true" to a column that can be sorted. This will add a default
+* strategy for that column.
+*
+* This approach may not be used for all implementations of Ng2ST.
+*/
+...
+columns:Array<Column>= [
+  ...
+  { title: "Name", target: "name", sort: true },
+  ...
+];
+...
+
+...
+/*
+* Using "addSortStrategy"
+*
+* Add a custom sort strategy to the column.
+*/
+...
+let sortForAutonomous:Sort= {
+  asc: (arg0, arg1) => arg0 === arg1 ? 0 (arg0 > arg1 ? 1 : -1),
+  desc: (arg0, arg1) => arg0 === arg1 ? 0 (arg0 < arg1 ? 1 : -1)
+};
+
+let sortForRest:RESTSort= {
+  asc: "sort=name_asc",
+  desc: "sort=name_desc"
+}
+
+//Autonomous table
+let table= Ng2STFactory.createAutonomous(data, columns);
+
+//add a default sort strategy to target="name"
+table.addSortStrategy("name");
+
+//add a custom sort strategy to target="name"
+table.addSortStrategy("name", sortForAutonomous);
+
+//add a default sort strategy to an Array of targets
+table.addSortStrategy(["name", "population"]);
+
+//add a custom sort strategy to an Array of targets
+table.addSortStrategy(["name", "population"], sortForAutonomous);
+
+//REST table
+let tableSort= Ng2STFactory.createREST(url, columns);
+tableSort.addSortStrategy("name", sortForRest);
+...
+
+```
+
+#### Add pagination
+
+Use "addPagination(initialPage, perPage)" to implement pagination.
+
+```typescrit
+...
+let table= Ng2STFactory.createAutonomous(data, columns);
+table.addPagination(1, 15);
+
+/**
+* For REST there are two options
+*
+* First: We fetch all data and it has to be paged in memory.
+* Second: The server supports pagination for the given url. So, we use query params.
+*/
+
+// First approach
+let tableRest= Ng2STFactory.createREST(url, columns);
+tableRest.addPagintion(1, 15);
+
+//Second approach
+/**
+* @param url
+* @param columns
+* @param dataResponseParam Property of the response that holds data.
+* @param pageRequestParam Param to add in the query string with the page value.
+* @param perPageRequestParam Param to add in the query string with the perPage value
+* @param totalPagesResponseParam Property of the response that holds the total number
+* of pages for the response.
+*
+* If pageRequestParam or perPageRequestParam is missing, the query string will not be modified.
+*/
+let tableRest= Ng2STFactory.createREST(url, columns, "payload", "page", "perPage", "totalPages");
+tableRest.addPagination(1, 15);
+...
+```
+
+#### Add filter
+For the moment filter functionality works in memory.
+
+```typescript
+/**
+* From column definition.
+*
+* This will treat the value as a string.
+*
+* This approach may not be used for all implementations of Ng2ST.
+*/
+...
+columns:Array<Column>= [
+  ...
+  { title: "Name", target: "name", filter: true },
+  ...
+];
+...
+
+...
+/**
+* Using "addFilter"
+*/
+
+//value= The value of the object for the given target. input= User input on the filter.
+let customFilter:Filter= {
+  filter: (value:any, input:any) => {
+
+    let v = (value as string).toLowerCase();
+    let i = (input as string).toLowerCase();
+
+    return v.indexOf(i) !== -1;
+  }
+}
+
+let table= Ng2STFactory.createAutonomoues(data, columns);
+
+//Adds a default filter for the column with target="name"
+table.addFilter("name");
+
+//Adds a custom filter for the column with target="name"
+table.addFilter("name", customFilter);
+...
+```
+
+#### Column with custom value
+
+Add columns that has to be displayed with a custom value and not a primitive. And example
+of this type of column is one that has actions for each row.
+
+Primitives are strings, numbers, boolean, etc.. Custom are buttons, links, images, etc.
+
+For this example we will use this class
+
+```typescript
+import { Component, Input } from '@angular/core';
+import { Ng2STComponent } from 'ng2-simple-table';
+
+@Component({
+  selector: 'fa-link',
+  template: '<a href [routerLink]="link"><i [ngClass]="classes"></i></a>'
+})
+export class FALinkComponent implements Ng2STComponent {
+
+  classes: string;
+  link: string;
+
+  constructor() { }
+
+  /**
+  * Return the type of this class. Only types should be returned.
+  */
+  public component() {
+    return FALinkComponent;
+  }
+
+  /**
+  * name: Name of a property of the class.
+  * value: Value to assign to that property.
+  */
+  public inputs(): Array<{name: string, value: any}> {
+
+    let ret= new Array<{name: string, value: any}>();
+
+    ret.push({name: "link", value: this.link});
+    ret.push({name: "classes", value: this.classes});
+
+    return ret;
+  }
+
+  public static create(_link: string, _classes: string): FALinkComponent {
+
+    let ret= new FALinkComponent();
+
+    ret.link= _link;
+    ret.classes= _classes;
+
+    return ret;
+  }
+}
+```
+
+```typescript
+...
+/**
+* Return a primitive
+*/
+columns:Array<Column>= [
+  ...
+  { title: "Actions", target: "id", filter: true,
+  customValue: (value, fullObject) => value + " changed" },
+  ...
+];
+...
+
+/**
+* Return an object that uses @Component from Angular2 and implements Ng2STComponent
+*/
+...
+columns:Array<Column>= [
+  {
+    title: "Actions",
+    target: "id",
+    filter: true,
+    customValue: (value, fullObject) =>
+                FALinkComponent.create(this.editRoute(value), "fa fa-pencil")
+  },
+];
+...
+
+/**
+* customValue can return an Array. Each value will be displayed next to the other.
+* For example: Return an Array<Ng2STRComponent> and each element will be next to the other.
+*/
+```
+
+### Implement your own table logic
+
+Ng2ST is now an interface. Implement this with your own code and pass it as parameter
+to the "ng2-simple-table" tag.
 
 ## TODO
   - Tests.
-  - Filter.
+  - Filter for REST with query params.
   - Show/Hide columns.
 
 ## License

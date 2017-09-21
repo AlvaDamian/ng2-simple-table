@@ -1,11 +1,10 @@
-import { Ng2ST, RESTSort, Sort, Column, ActionsColumn, ActionsColumnForEachRow } from '../interfaces';
+import { Ng2ST, RESTSort, Sort, Column,
+         Filter } from '../interfaces';
 import { get } from 'request';
+import { BaseImplementation } from './base';
 
-export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
+export class Ng2STREST extends BaseImplementation<Sort | RESTSort> {
 
-  private DEFAULT_ACTIONS_TARGET= 'Ng2STActionsColumn';
-
-  private actions: ActionsColumn;
   private lastData: {
     data: Array<any>,
     page: number,
@@ -13,8 +12,6 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
   };
 
   // Pagination
-  private page: number;
-  private perPage: number;
   private totalsPage: number;
 
   // Request params
@@ -25,8 +22,6 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
   private totalsPageParam: string;
   private dataParam: string;
 
-  private actionsTarget: string;
-
   // Sort
   private sortTarget: string;
   private sortAsc: boolean;
@@ -34,13 +29,14 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
 
   constructor(
     private url: string,
-    private columns: Array<Column>,
+    columns: Array<Column>,
     dataResponseParam?: string,
     pageRequestParam?: string,
     perPageRequestParam?: string,
     totalPagesResponseParam?: string
   ) {
 
+    super(columns);
     this.sortStrategies = new Map<string, Sort | RESTSort>();
     this.lastData = {
       data: new Array<any>(),
@@ -51,7 +47,9 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
     if (dataResponseParam) { this.dataParam = dataResponseParam; }
     if (pageRequestParam) { this.pageParam = pageRequestParam; }
     if (perPageRequestParam) { this.perPageParam = perPageRequestParam; }
-    if (totalPagesResponseParam) { this.totalsPageParam = totalPagesResponseParam; }
+    if (totalPagesResponseParam) {
+      this.totalsPageParam = totalPagesResponseParam;
+    }
   }
 
   public getData(): Promise<Array<any>> {
@@ -59,6 +57,8 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
 
       let url = this.createUrl();
       let ret: Array<any>;
+      let page = this.getPage();
+      let perPage = this.getPerPage();
 
       get(url, { json: true }, (error, response, body) => {
 
@@ -83,7 +83,11 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
           }
         }
 
-        if (this.totalsPageParam && result.hasOwnPropert(this.totalsPageParam)) {
+        if (
+            this.totalsPageParam
+            && result.hasOwnPropert(this.totalsPageParam)
+          ) {
+
           this.totalsPage = result[this.totalsPageParam];
         }
 
@@ -103,14 +107,19 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
           }
         }
 
-        if (!this.pageParam && !this.perPageParam && this.page && this.perPage) {
+        if (
+            !this.pageParam
+            && !this.perPageParam
+            && page
+            && perPage
+          ) {
 
-          let calc = this.lastData.data.length / this.perPage;
+          let calc = this.lastData.data.length / perPage;
           let fixedValue = Math.floor(calc);
 
           this.totalsPage = fixedValue === calc ? fixedValue : fixedValue + 1;
 
-          ret = this.pageResponse(this.lastData.data, this.page, this.perPage);
+          ret = this.pageData(this.lastData.data, page, perPage);
         }
 
         resolve(ret);
@@ -118,40 +127,8 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
     });
   }
 
-  public getColumns(): Array<Column> {
-    return this.columns;
-  }
-
   public getNumberOfPages(): number {
     return this.totalsPage;
-  }
-
-  public getPage(): number {
-    return this.page;
-  }
-
-  public getValue(obj: any, column: Column): any {
-
-    let target = column.target;
-
-    if (target === this.actionsTarget) {
-      return this.getActions(obj);
-    }
-
-    if (obj.hasOwnProperty(target)) {
-
-      if (column.customValue) {
-        return column.customValue(obj[target], obj);
-      }
-
-      return obj[target];
-    }
-
-    return null;
-  }
-
-  public getActionsColumn(): ActionsColumn {
-    return this.actions;
   }
 
   public getSortStrategy(target: string): Sort | RESTSort {
@@ -161,21 +138,6 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
     }
 
     return null;
-  }
-
-  public setPage(page: number): void {
-    this.page = page;
-  }
-
-  public setActionsColumn(column: ActionsColumn): void {
-
-    this.actions = column;
-
-    if (this.actions && !this.actions.forEachRow) {
-      this.actions.forEachRow = new Array<ActionsColumnForEachRow>();
-    }
-
-    this.addActionsToHeader(this.columns);
   }
 
   public sort(target: string, asc = true): void {
@@ -228,12 +190,6 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
     return ret;
   }
 
-  public addPagination(initialPage: number, perPage: number): void {
-
-    this.page = initialPage;
-    this.perPage = perPage;
-  }
-
   private createUrl(): string {
 
     let ret: string = this.url;
@@ -246,8 +202,16 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
     }
 
     if (this.perPageParam && this.pageParam) {
-      ret = ret.concat(this.pageParam).concat('=').concat(this.page.toString());
-      ret = ret.concat('&').concat(this.perPageParam).concat('=').concat(this.perPage.toString());
+      ret = ret
+            .concat(this.pageParam)
+            .concat('=')
+            .concat(this.getPage().toString());
+
+      ret = ret
+            .concat('&')
+            .concat(this.perPageParam)
+            .concat('=')
+            .concat(this.getPerPage().toString());
     }
 
     if (this.sortTarget && this.hasSortStrategy(this.sortTarget)) {
@@ -259,73 +223,6 @@ export class Ng2STREST implements Ng2ST<Sort | RESTSort> {
       } else if (!this.sortAsc && typeof strategy.desc === 'string') {
         ret = ret.concat(strategy.desc as  string);
       }
-    }
-
-    return ret;
-  }
-
-  private getActions(obj: any): any {
-
-    if (!this.actions) {
-      return null;
-    }
-
-    let actions = '';
-
-    if (this.actions.forEachRow) {
-
-      for (let call of this.actions.forEachRow) {
-
-        actions += call.callBack(obj);
-      }
-    }
-
-    return actions;
-  }
-
-  private addActionsToHeader(header: Array<any>): void {
-
-    if (!this.actions) {
-      return;
-    }
-
-    this.actionsTarget = this.resolveActionsColumnTarget(this.columns, this.DEFAULT_ACTIONS_TARGET);
-    let toAdd = {title: this.actions.title, target: this.actionsTarget };
-
-    if (this.actions.displayOnLeft) {
-      header.unshift(toAdd);
-    } else {
-      header.push(toAdd);
-    }
-  }
-
-  private resolveActionsColumnTarget(columns: Array<Column>, desiredResult: string): string {
-
-    let exists = columns.find(value => value.target === desiredResult) != null;
-
-    return !exists ?
-            desiredResult :
-            this.resolveActionsColumnTarget(columns, desiredResult + desiredResult);
-  }
-
-  private pageResponse(data: Array<any>, page: number, perPage: number): Array<any> {
-
-    let ret: Array<any> = new Array<any>();
-
-    if (data.length - (page - 1) * perPage <= 0) {
-      return ret;
-    }
-
-    let index: number;
-    for (let i = 0; i < perPage; i++) {
-
-      index = perPage * (page - 1) + i;
-
-      if (index >= data.length) {
-        break;
-      }
-
-      ret.push(data[index]);
     }
 
     return ret;

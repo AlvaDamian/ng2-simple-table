@@ -8,10 +8,15 @@ export class Ng2STCssConfiguration {
   private tableClass: string | Array<string> | Set<string>;
   private caretAscClass: string | Array<string> | Set<string>;
   private caretDesClass: string | string[] | Set<string>;
+
+  //pagination
   private paginationClass: string | string[] | Set<string>;
   private paginationItemClass: string | string[] | Set<string>;
   private paginationLinkClass: string | string[] | Set<string>;
   private paginationActiveItemClass: string | string[] | Set<string>;
+
+  //filter
+  private filterControlClass: string | string[] | Set<string>;
 
   public static joinClasses(
     left: string | string[] | Set<string>,
@@ -93,6 +98,11 @@ export class Ng2STCssConfiguration {
     this.configurationChanged.emit();
   }
 
+  public setFiltercontrol(css: string | string[] | Set<string>): void {
+    this.filterControlClass = css;
+    this.configurationChanged.emit();
+  }
+
   public getTable(): string | Array<string> | Set<string> {
     return this.tableClass;
   }
@@ -119,5 +129,9 @@ export class Ng2STCssConfiguration {
 
   public getPaginationActiveItem(): string | string[] | Set<string> {
     return this.paginationActiveItemClass;
+  }
+
+  public getFilterControl(): string | string[] | Set<string> {
+    return this.filterControlClass;
   }
 }

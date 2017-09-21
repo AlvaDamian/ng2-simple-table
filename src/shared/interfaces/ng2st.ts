@@ -1,4 +1,5 @@
-import { Column, ActionsColumn } from './';
+import { Column, Filter, Pagination, Ng2STComponent } from './';
+
 
 export interface Ng2ST<T> {
 
@@ -30,12 +31,7 @@ export interface Ng2ST<T> {
   *
   * @return The asked value or null if doesn't exists.
   */
-  getValue(obj: any, column: Column): any;
-
-  /**
-  * Obtains the current actions.
-  */
-  getActionsColumn(): ActionsColumn;
+  getValue(obj: any, column: Column): Array<Ng2STComponent> | Array<any> | any;
 
   /**
   * Gets the sort strategy used for target.
@@ -50,18 +46,12 @@ export interface Ng2ST<T> {
   setPage(page: number): void;
 
   /**
-  * Sets the actions column.
-  *
-  * @param column Actions column to be used.
-  */
-  setActionsColumn(column: ActionsColumn): void;
-
-  /**
   * Sorts data using the strategy for target.
   * The strategy to use must be set or an error will be raised.
   *
   * @param target Property to use for sorting.
-  * @param asc If has to be sorted in ascending order. false it has to be descending.
+  * @param asc If has to be sorted in ascending order.
+  *        false if it has to be descending.
   */
   sort(target: string, asc: boolean): void;
 
@@ -79,12 +69,17 @@ export interface Ng2ST<T> {
   * The same strategy will be added to all targets.
   *
   * @param target Property or group of properties by wich data should be sorted.
-  * @param sortStrategy Sort strategy to use. It it is not set, a default sort strategy will be used.
-  * @param replace If a sort strategy is found, replace it or not. TRUE by default.
+  * @param sortStrategy Sort strategy to use.
+  *        If it is not set, a default sort strategy will be used.
+  * @param replace If a sort strategy is found, TRUE by default.
   *
   * @return The list of targets that got added.
   */
-  addSortStrategy(target: string | string[], sortStrategy?: T, replace?: boolean): string[];
+  addSortStrategy(
+    target: string | string[],
+    sortStrategy?: T,
+    replace?: boolean
+  ): string[];
 
   /**
   * Adds pagination.
@@ -93,4 +88,12 @@ export interface Ng2ST<T> {
   * @param perPage Number or items per page.
   */
   addPagination(initialPage: number, perPage: number): void;
+
+  addFilter(target: string, filter?: Filter): void;
+
+  applyFilter(target: string, value: any): void;
+
+  removeFilter(target: string): void;
+
+  hasFilter(column: Column): boolean;
 }

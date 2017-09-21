@@ -1,5 +1,5 @@
 import { Ng2ST, Ng2STFactory } from '../';
-import { ActionsColumn, Column, RESTSort, Sort } from '../interfaces';
+import { Column, RESTSort, Sort } from '../interfaces';
 
 
 describe('Ng2STREST tests', () => {
@@ -12,7 +12,6 @@ describe('Ng2STREST tests', () => {
   let url: string;
   let columns: Array<Column>;
   let ng2STInstance: Ng2ST<Sort | RESTSort>;
-  let actionsColumn: ActionsColumn;
   let initialPage: number;
   let perPage: number;
 
@@ -42,50 +41,16 @@ describe('Ng2STREST tests', () => {
       { title: 'Capital', target: 'capital' }
     );
 
+    /*
     actionsColumn = {
       title: ACTIONS_INITIAL_TITLE,
       displayOnLeft: ACTIONS_ON_LEFT_SIDE
     };
+    */
 
     initialPage = 1;
     perPage = 4;
     ng2STInstance = Ng2STFactory.createREST(url, columns);
-  });
-
-  it('Should set actions columns', () => {
-
-    ng2STInstance.setActionsColumn(actionsColumn);
-
-    let temp: ActionsColumn = ng2STInstance.getActionsColumn();
-
-    expect(temp).toBeDefined();
-    expect(temp.title).toBeDefined();
-    expect(temp.displayOnLeft).toBeDefined();
-
-    expect(temp).toBe(actionsColumn);
-    expect(temp.title).toBe(ACTIONS_INITIAL_TITLE);
-    expect(temp.displayOnLeft).toBe(ACTIONS_INITIAL_SIDE);
-  });
-
-  it('Should not set actions column if a null parameter is given', () => {
-
-    ng2STInstance.setActionsColumn(null);
-
-    let temp: ActionsColumn = ng2STInstance.getActionsColumn();
-    let columnsQuantity = ng2STInstance.getColumns().length;
-
-    expect(temp).toBeNull();
-    expect(columns.length).toEqual(columnsQuantity);
-  });
-
-  it('Should add a new column if actions are setted', () => {
-
-    let initialColumnsQuantity = columns.length;
-    ng2STInstance.setActionsColumn(actionsColumn);
-
-    let currentColumnsQuantity = ng2STInstance.getColumns().length;
-
-    expect(initialColumnsQuantity + 1).toBe(currentColumnsQuantity);
   });
 
   it('Should add a new sort strategy', () => {
@@ -112,8 +77,9 @@ describe('Ng2STREST tests', () => {
     expect(result).toBe(anotherSort);
   });
 
-  it('Should not add a new sort strategy if already exists one and we don\'t want to replace it',
-  () => {
+  it('Should not add a new sort strategy if ' +
+    ' already exists one and we don\'t want to replace it',
+    () => {
 
     ng2STInstance.addSortStrategy(sortTarget, sort);
     ng2STInstance.addSortStrategy(sortTarget, anotherSort, false);
@@ -131,7 +97,8 @@ describe('Ng2STREST tests', () => {
     expect(ng2STInstance.getSortStrategy(sortTarget)).toBe(sort);
   });
 
-  it('Should return NULL when there is no sort strategy for a given target', () => {
+  it('Should return NULL when there is no sort strategy for a given target',
+    () => {
 
     let temp = ng2STInstance.getSortStrategy(unknownTarget);
 
@@ -148,8 +115,13 @@ describe('Ng2STREST tests', () => {
   it('Should return the number of available pages', () => {
 
     ng2STInstance.addPagination(initialPage, perPage);
-    let total = ng2STInstance.getNumberOfPages();
 
-    expect(total).toEqual(2);
+    ng2STInstance
+    .getData()
+    .then(d => {
+      let total = ng2STInstance.getNumberOfPages();
+
+      expect(total).toEqual(2);
+    });
   });
 });

@@ -50,7 +50,9 @@ describe('Ng2CssConfiguration test', () => {
     expect(joined).toEqual(expected);
   });
 
-  it('Should return NULL when trying to join with an undefined or null parameter', () => {
+  it('Should return NULL when trying to join with an' +
+     ' undefined or null parameter',
+     () => {
 
     let joined = Ng2STCssConfiguration.joinClasses(tableCss, undefined);
     expect(joined).toBeNull();

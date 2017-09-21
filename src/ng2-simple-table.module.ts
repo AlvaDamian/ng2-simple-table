@@ -1,7 +1,7 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { TableComponent } from './components';
+import { TableComponent, ContentWrapperComponent } from './components';
 import { Ng2STCssConfiguration } from './shared';
 
 @NgModule({
@@ -9,10 +9,12 @@ import { Ng2STCssConfiguration } from './shared';
     CommonModule
   ],
   declarations: [
-    TableComponent
+    TableComponent,
+    ContentWrapperComponent
   ],
   exports: [
-    TableComponent
+    TableComponent,
+    ContentWrapperComponent
   ]
 })
 export class Ng2SimpleTableModule {

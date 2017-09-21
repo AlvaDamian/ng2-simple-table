@@ -1,6 +1,6 @@
 {
   "name": "ng2-simple-table",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/AlvaDamian/ng2-simple-table"
@@ -11,7 +11,8 @@
   },
   "keywords": [
     "angular 4",
-    "ng2-simple-table"
+    "ng2-simple-table",
+    "dynamic content"
   ],
   "license": "MIT",
   "bugs": {

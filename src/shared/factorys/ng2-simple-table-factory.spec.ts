@@ -1,6 +1,6 @@
 import { Ng2STFactory } from './';
 import { Ng2ST } from '../interfaces';
-import { Column, ActionsColumn, ActionsColumnForEachRow, Sort } from '../interfaces';
+import { Column, Sort } from '../interfaces';
 
 
 describe('Ng2STFactory tests', () => {
@@ -15,16 +15,12 @@ describe('Ng2STFactory tests', () => {
   const ACTIONS_ON_LEFT_SIDE = true;
 
   const ACTIONS_INITIAL_TITLE = 'Actions';
-  const ACTIONS_INITIAL_FOR_EACH_ROW: [ActionsColumnForEachRow] = [{
-    callBack: (d) => 'test'
-  }];
 
   let data: Array<any>;
   let columns: Array<Column>;
   let ng2STBasicInstance: Ng2ST<Sort>;
   let ng2STWithActionsInstance: Ng2ST<Sort>;
   let tableClasses: string;
-  let actionsColumn: ActionsColumn;
 
   beforeEach(() => {
 
@@ -42,16 +38,17 @@ describe('Ng2STFactory tests', () => {
       { title: 'Name', target: 'name' }
     );
 
+    /*
     actionsColumn = {
       title: ACTIONS_INITIAL_TITLE,
       displayOnLeft: ACTIONS_ON_LEFT_SIDE,
       forEachRow: ACTIONS_INITIAL_FOR_EACH_ROW
     };
+    */
 
     tableClasses = 'table table-striped table-condensed table-bordered';
 
     ng2STBasicInstance = Ng2STFactory.createAutonomous(data, columns);
-    ng2STWithActionsInstance = Ng2STFactory.createAutonomous(data, columns, actionsColumn);
   });
 
   it('Should be defined', () => {
@@ -70,13 +67,5 @@ describe('Ng2STFactory tests', () => {
     });
 
     expect(ng2STBasicInstance.getColumns()).toBe(columns);
-  });
-
-  it('Should create a Ng2ST object with actions', () => {
-
-    let temp = ng2STWithActionsInstance.getActionsColumn();
-
-    expect(temp).toBeDefined();
-    expect(temp).toBe(actionsColumn);
   });
 });

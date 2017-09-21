@@ -1,6 +1,6 @@
 import { Component, Input, OnInit} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Column } from '../../shared/interfaces';
+import { Column, Ng2STComponent } from '../../shared/interfaces';
 import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
 
 @Component({
@@ -11,6 +11,7 @@ import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
 export class TableComponent implements OnInit {
 
   loading: boolean;
+  showFilters: boolean;
   data: Array<any>;
   columns: Array<Column>;
   tableClasses: string|string[]|Set<string>;
@@ -25,6 +26,7 @@ export class TableComponent implements OnInit {
   paginationItemClass: string|string[]|Set<string>;
   paginationLinkClass: string|string[]|Set<string>;
   paginationActiveItemClass: string|string[]|Set<string>;
+  filterControlClasses: string | string[] | Set<string>;
 
   currentSort = {
     target: null,
@@ -40,6 +42,7 @@ export class TableComponent implements OnInit {
     this.loading = false;
     this.data = new Array<any>();
     this.columns = new Array<Column>();
+    this.showFilters = false;
   }
 
   public ngOnInit(): void {
@@ -66,17 +69,46 @@ export class TableComponent implements OnInit {
     this.paginationActiveItemClass = Ng2STCssConfiguration
                                     .joinClasses(
                                       this.paginationItemClass,
-                                      this.cssConfiguration.getPaginationActiveItem()
+                                      this.cssConfiguration
+                                      .getPaginationActiveItem()
                                     );
+
+    this.filterControlClasses = this.cssConfiguration.getFilterControl();
   }
 
   public getValue(obj, column): any {
 
-    return this.domSanitizer.bypassSecurityTrustHtml(this.settings.getValue(obj, column));
+    return this.settings.getValue(obj, column);
+    /*
+    return this
+           .domSanitizer
+           .bypassSecurityTrustHtml(
+             this.settings.getValue(
+               obj,
+               column
+             )
+           );
+           */
+  }
+
+  public isArray(value: any): boolean {
+    return Array.isArray(value);
+  }
+
+  public isPrimitive(value: any): boolean {
+    return !(typeof value === 'object' || typeof value === 'function');
+  }
+
+  public getType(value: any) {
+    return (value as Ng2STComponent).component();
   }
 
   public canSort(col: Column): boolean {
     return this.settings.hasSortStrategy(col.target);
+  }
+
+  public canFilter(col: Column): boolean {
+    return this.settings.hasFilter(col);
   }
 
   public sortByColumn($event, col: Column): void {
@@ -84,7 +116,10 @@ export class TableComponent implements OnInit {
     $event.preventDefault();
     $event.stopPropagation();
 
-    if (this.currentSort.target !== null && this.currentSort.target === col.target) {
+    if (
+        this.currentSort.target !== null
+        && this.currentSort.target === col.target
+       ) {
 
       this.currentSort.asc = !this.currentSort.asc;
     } else {
@@ -119,6 +154,25 @@ export class TableComponent implements OnInit {
     $event.stopPropagation();
 
     this.changeCurrentPage(pageNumber);
+  }
+
+  public addFilter($event, column: Column): boolean {
+
+    let value: string = $event.target.value;
+
+    if (value === '') {
+      $event.preventDefault();
+      $event.stopPropagation();
+    }
+
+    if (value.length === 0) {
+      this.settings.removeFilter(column.target);
+    } else {
+      this.settings.applyFilter(column.target, value);
+    }
+
+    this.resolveData();
+    return false;
   }
 
   private changeCurrentPage(page: number): void {

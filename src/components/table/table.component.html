@@ -1,87 +1,128 @@
 <table [ngClass]="tableClasses">
-	<thead>
-		<tr>
-			<th *ngFor="let c of columns">
-				<p *ngIf="canSort(c)">
-					<a href (click)="sortByColumn($event, c)">{{c.title}}</a>
+  <thead>
+    <tr>
+      <th *ngFor="let c of columns">
+        <p *ngIf="canSort(c)">
+          <a href (click)="sortByColumn($event, c)">{{c.title}}</a>
 
-					<a
-						href
-						*ngIf="currentSort.target == c.target && currentSort.asc"
-						(click)="sortByColumn($event, c)"
-					>
-						<i [ngClass]="caretAscClasses"></i>
-					</a>
+          <a
+            href
+            *ngIf="currentSort.target == c.target && currentSort.asc"
+            (click)="sortByColumn($event, c)"
+          >
+            <i [ngClass]="caretAscClasses"></i>
+          </a>
 
-					<a
-						href
-						*ngIf="currentSort.target == c.target && !currentSort.asc"
-						(click)="sortByColumn($event, c)"
-					>
-						<i [ngClass]="caretDescClasses"></i>
-					</a>
-				</p>
+          <a
+            href
+            *ngIf="currentSort.target == c.target && !currentSort.asc"
+            (click)="sortByColumn($event, c)"
+          >
+            <i [ngClass]="caretDescClasses"></i>
+          </a>
+        </p>
 
-				<p *ngIf="!canSort(c)">
-					{{c.title}}
-				</p>
-			</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr *ngFor="let d of data;">
-			<td *ngFor="let c of columns;"
-			[innerHtml]="getValue(d, c)">
-			</td>
-		</tr>
+        <p *ngIf="!canSort(c)">
+          {{c.title}}
+        </p>
+      </th>
+    </tr>
 
-		<tr *ngIf="data.length == 0">
-			<td [attr.colspan]="columns.length">
-				{{ loading ? "Loading..." : "There is no data to display." }}
-			</td>
-		</tr>
-	</tbody>
+    <tr>
+      <th *ngFor="let c of columns">
+        <input
+          type="text"
+          *ngIf="canFilter(c)"
+          (keyup)="addFilter($event, c)"
+          [ngClass]="filterControlClasses"
+          placeholder="Filter"
+        />
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <!--
+    <tr *ngFor="let d of data;">
+      <td *ngFor="let c of columns;"
+      [innerHtml]="getValue(d, c)">
+      </td>
+    </tr>
+  -->
 
-	<tfoot *ngIf="numberOfPages > 1">
-		<tr>
-			<td [attr.colspan]="columns.length">
-				<nav>
-				  <ul [ngClass]="paginationClass">
-				    <li [ngClass]="paginationItemClass">
-				      <a
-				      	href
-				      	[ngClass]="paginationLinkClass"
-				      	(click)="previousPage($event)"
-				      >
-				        <span>&laquo;</span>
-				      </a>
-				    </li>
+    <tr *ngFor="let d of data;">
+      <td *ngFor="let c of columns;">
+        <div *ngIf="isArray(getValue(d, c))">
+          <span *ngFor="let value of getValue(d, c)">
+            <span *ngIf="isPrimitive(value)">
+              {{ value }}
+            </span>
 
-				    <li
-				    	*ngFor="let i of numberOfPagesRange"
-				    	[ngClass]="i != currentPage ? paginationItemClass : paginationActiveItemClass"
-				    >
-				    	<a
-				    		href
-				    		[ngClass]="paginationLinkClass"
-				    		(click)="changePage($event, i)">
+            <span *ngIf="!isPrimitive(value)">
+              <dcl-wrapper [value]="value"></dcl-wrapper>
+            </span>
+          </span>
+        </div>
 
-				    		{{ i }}
-				    	</a>
-				    </li>
+        <div *ngIf="!isArray(getValue(d, c))">
+          <div *ngIf="isPrimitive(getValue(d, c))">
+            {{ getValue(d, c) }}
+          </div>
 
-				    <li [ngClass]="paginationItemClass">
-				      <a
-				      	href
-				      	[ngClass]="paginationLinkClass"
-				      	(click)="nextPage($event)"
-				      >
-				        <span>&raquo;</span>
-				      </a>
-				    </li>
-				  </ul>
-				</nav>
-			</td>
-		</tr>
-	</tfoot>
+          <div *ngIf="!isPrimitive(getValue(d, c))">
+            <dcl-wrapper [value]="getValue(d, c)"></dcl-wrapper>
+          </div>
+        </div>
+      </td>
+    </tr>
+
+
+    <tr *ngIf="data.length == 0">
+      <td [attr.colspan]="columns.length">
+        {{ loading ? "Loading..." : "There is no data to display." }}
+      </td>
+    </tr>
+  </tbody>
+
+  <tfoot *ngIf="numberOfPages > 1">
+    <tr>
+      <td [attr.colspan]="columns.length">
+        <nav>
+          <ul [ngClass]="paginationClass">
+            <li [ngClass]="paginationItemClass">
+              <a
+                href
+                [ngClass]="paginationLinkClass"
+                (click)="previousPage($event)"
+              >
+                <span>&laquo;</span>
+              </a>
+            </li>
+
+            <li
+              *ngFor="let i of numberOfPagesRange"
+              [ngClass]="i != currentPage ? paginationItemClass : paginationActiveItemClass"
+            >
+              <a
+                href
+                [ngClass]="paginationLinkClass"
+                (click)="changePage($event, i)">
+
+                {{ i }}
+              </a>
+            </li>
+
+            <li [ngClass]="paginationItemClass">
+              <a
+                href
+                [ngClass]="paginationLinkClass"
+                (click)="nextPage($event)"
+              >
+                <span>&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </td>
+    </tr>
+  </tfoot>
 </table>

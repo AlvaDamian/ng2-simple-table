@@ -1,3 +1,6 @@
+/**
+* Base information for a column.
+*/
 export interface BaseColumn {
 
 	/**
