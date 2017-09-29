@@ -1,7 +1,11 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { TableComponent, ContentWrapperComponent } from './components';
+import {
+  Ng2STTableComponent,
+  Ng2STPaginationComponent,
+  ContentWrapperComponent
+} from './components';
 import { Ng2STCssConfiguration } from './shared';
 
 @NgModule({
@@ -9,11 +13,12 @@ import { Ng2STCssConfiguration } from './shared';
     CommonModule
   ],
   declarations: [
-    TableComponent,
+    Ng2STTableComponent,
+    Ng2STPaginationComponent,
     ContentWrapperComponent
   ],
   exports: [
-    TableComponent,
+    Ng2STTableComponent,
     ContentWrapperComponent
   ]
 })

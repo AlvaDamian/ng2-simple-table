@@ -1,6 +1,9 @@
 import { BaseColumn } from './private/BaseColumn';
 import { Ng2STComponent } from './';
 
+export type CustomValueType = (value: any, fullObject?: any) => Ng2STComponent
+                              | any;
+
 /**
 * Represents a Column in the table.
 */
@@ -8,6 +11,9 @@ export interface Column extends BaseColumn {
 
   /**
   * Property that this column matchs.
+  *
+  * It can have dot notation if property is an object. For example:
+  * 'nestedObject.id' will get the value 7 from { nestedValue: { id: 7 } }
   */
   target: string;
 
@@ -19,7 +25,7 @@ export interface Column extends BaseColumn {
   *
   * @return What has to be displayed.
   */
-  customValue?: ((value: any, fullObject?: any) => Ng2STComponent | Array<Ng2STComponent> | any) | Array<(value: any, fullObject?: any) => Ng2STComponent | Array<Ng2STComponent> | any>;
+  customValue?: CustomValueType | Array<CustomValueType>;
 
   /**
   * Add a default filter for this column.
@@ -36,7 +42,28 @@ export interface Column extends BaseColumn {
   sort?: boolean;
 
   /**
-  * If this represents a columns options and should not be sorted or filtered.
+  * If this represents a column with options and should not be sorted or filtered.
   */
   isOptions?: boolean;
+
+  /**
+  * Sub columns for this column.
+  */
+  subColumns?: Array<Column>;
+
+  /**
+  * Number of columns that this instance occupies. Usefull when @subColumns is setted
+  * on any column.
+  *
+  * Default 1.
+  */
+  colspan?: number;
+
+  /**
+  * Number of rows that this instance occupies. Usefull when @subColumns is setted
+  * on any column.
+  *
+  * Default 1.
+  */
+  rowspan?: number;
 }

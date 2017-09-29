@@ -1,5 +1,15 @@
+/**
+* Pagination info.
+*/
 export interface Pagination {
 
-	page: number;
-	perPage: number;
+  /**
+  * Page to use.
+  */
+  page: number;
+
+  /**
+  * Item per page.
+  */
+  perPage: number;
 }

@@ -64,7 +64,7 @@ export class Ng2STCssConfiguration {
   }
 
   public setTable(css: string | Array<string> | Set<string>): void {
-    this.tableClass = css;
+    this.tableClass = Ng2STCssConfiguration.joinClasses("ng2-simple-table", css);
     this.configurationChanged.emit();
   }
 

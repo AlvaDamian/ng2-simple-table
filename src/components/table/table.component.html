@@ -1,83 +1,125 @@
+<ng-template #headerRow let-cols="columns">
+  <tr>
+    <th *ngFor="let c of cols" [attr.colspan]="c.colspan" [attr.rowspan]="c.rowspan">
+      <span *ngIf="canSort(c)">
+        <a href (click)="sortByColumn($event, c)">{{c.title}}</a>
+
+        <a
+          href
+          *ngIf="currentSort.target == c.target && currentSort.asc"
+          (click)="sortByColumn($event, c)"
+        >
+          <i [ngClass]="caretAscClasses"></i>
+        </a>
+
+        <a
+          href
+          *ngIf="currentSort.target == c.target && !currentSort.asc"
+          (click)="sortByColumn($event, c)"
+        >
+          <i [ngClass]="caretDescClasses"></i>
+        </a>
+      </span>
+
+      <span *ngIf="!canSort(c)">
+        {{c.title}}
+      </span>
+    </th>
+  </tr>
+</ng-template>
+
+<ng-template #filterColumn let-currentColumn="column">
+  <ng-container *ngIf="hasSubColumns(currentColumn)">
+    <ng-container *ngFor="let sub of subColumns(currentColumn)">
+      <ng-container *ngTemplateOutlet="filterColumn; context:{column: sub}">
+
+      </ng-container>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="!hasSubColumns(currentColumn)">
+    <th>
+      <input
+        type="text"
+        *ngIf="canFilter(currentColumn)"
+        (keyup)="addFilter($event, currentColumn)"
+        [ngClass]="filterControlClasses"
+        placeholder="Filter"
+      />
+    </th>
+  </ng-container>
+</ng-template>
+
+<ng-template #dataRow let-currentData="data">
+  <tr (click)="emitOnRowSelect(currentData)">
+    <ng-container *ngFor="let c of columns">
+      <ng-container *ngTemplateOutlet="dataColumn; context: {column: c, data: currentData, value: getValue(currentData, c)}">
+      </ng-container>
+    </ng-container>
+  </tr>
+</ng-template>
+
+<ng-template #dataColumn let-currentColumn="column" let-currentData="data" let-currentValue="value">
+  <td *ngIf="!hasSubColumns(currentColumn)">
+    <ng-container *ngIf="isArray(currentValue)">
+      <ng-container *ngFor="let v of currentValue">
+        <ng-container *ngIf="isPrimitive(v)">
+          {{ v }}
+        </ng-container>
+
+        <ng-container *ngIf="!isPrimitive(v)">
+          <dcl-wrapper [value]="v"></dcl-wrapper>
+        </ng-container>
+      </ng-container>
+    </ng-container>
+
+    <ng-container *ngIf="!isArray(currentValue)">
+      <ng-container *ngIf="isPrimitive(currentValue)">
+        {{ currentValue }}
+      </ng-container>
+
+      <ng-container *ngIf="!isPrimitive(currentValue)">
+        <dcl-wrapper [value]="currentValue"></dcl-wrapper>
+      </ng-container>
+    </ng-container>
+  </td>
+
+  <ng-container *ngIf="hasSubColumns(currentColumn)">
+    <ng-container *ngFor="let c of subColumns(currentColumn)">
+      <ng-container *ngTemplateOutlet="dataColumn; context: {column: c, data: currentData, value: getValue(currentData, c)}"></ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
 <table [ngClass]="tableClasses">
   <thead>
-    <tr>
-      <th *ngFor="let c of columns">
-        <p *ngIf="canSort(c)">
-          <a href (click)="sortByColumn($event, c)">{{c.title}}</a>
 
-          <a
-            href
-            *ngIf="currentSort.target == c.target && currentSort.asc"
-            (click)="sortByColumn($event, c)"
-          >
-            <i [ngClass]="caretAscClasses"></i>
-          </a>
+    <ng-container *ngFor="let rowColumns of header">
+      <ng-container *ngTemplateOutlet="headerRow; context:{columns: rowColumns}">
+      </ng-container>
+    </ng-container>
 
-          <a
-            href
-            *ngIf="currentSort.target == c.target && !currentSort.asc"
-            (click)="sortByColumn($event, c)"
-          >
-            <i [ngClass]="caretDescClasses"></i>
-          </a>
-        </p>
-
-        <p *ngIf="!canSort(c)">
-          {{c.title}}
-        </p>
-      </th>
-    </tr>
 
     <tr>
-      <th *ngFor="let c of columns">
-        <input
-          type="text"
-          *ngIf="canFilter(c)"
-          (keyup)="addFilter($event, c)"
-          [ngClass]="filterControlClasses"
-          placeholder="Filter"
-        />
-      </th>
+      <ng-container *ngFor="let c of columns">
+        <ng-container *ngTemplateOutlet="filterColumn; context:{column: c}"></ng-container>
+      </ng-container>
     </tr>
   </thead>
+
   <tbody>
-    <!--
-    <tr *ngFor="let d of data;">
-      <td *ngFor="let c of columns;"
-      [innerHtml]="getValue(d, c)">
-      </td>
-    </tr>
-  -->
-
-    <tr *ngFor="let d of data;">
-      <td *ngFor="let c of columns;">
-        <div *ngIf="isArray(getValue(d, c))">
-          <span *ngFor="let value of getValue(d, c)">
-            <span *ngIf="isPrimitive(value)">
-              {{ value }}
-            </span>
-
-            <span *ngIf="!isPrimitive(value)">
-              <dcl-wrapper [value]="value"></dcl-wrapper>
-            </span>
-          </span>
-        </div>
-
-        <div *ngIf="!isArray(getValue(d, c))">
-          <div *ngIf="isPrimitive(getValue(d, c))">
-            {{ getValue(d, c) }}
-          </div>
-
-          <div *ngIf="!isPrimitive(getValue(d, c))">
-            <dcl-wrapper [value]="getValue(d, c)"></dcl-wrapper>
-          </div>
-        </div>
+    <tr *ngIf="data.length > 0 && loading">
+      <td [attr.colspan]="columnCount()">
+        {{ "Loading..." }}
       </td>
     </tr>
 
+    <ng-container *ngFor="let d of data">
+      <ng-container *ngTemplateOutlet="dataRow; context: {data: d}"></ng-container>
+    </ng-container>
 
     <tr *ngIf="data.length == 0">
-      <td [attr.colspan]="columns.length">
+      <td [attr.colspan]="columnCount()">
         {{ loading ? "Loading..." : "There is no data to display." }}
       </td>
     </tr>
@@ -85,42 +127,15 @@
 
   <tfoot *ngIf="numberOfPages > 1">
     <tr>
-      <td [attr.colspan]="columns.length">
+      <td [attr.colspan]="columnCount()">
         <nav>
-          <ul [ngClass]="paginationClass">
-            <li [ngClass]="paginationItemClass">
-              <a
-                href
-                [ngClass]="paginationLinkClass"
-                (click)="previousPage($event)"
-              >
-                <span>&laquo;</span>
-              </a>
-            </li>
-
-            <li
-              *ngFor="let i of numberOfPagesRange"
-              [ngClass]="i != currentPage ? paginationItemClass : paginationActiveItemClass"
-            >
-              <a
-                href
-                [ngClass]="paginationLinkClass"
-                (click)="changePage($event, i)">
-
-                {{ i }}
-              </a>
-            </li>
-
-            <li [ngClass]="paginationItemClass">
-              <a
-                href
-                [ngClass]="paginationLinkClass"
-                (click)="nextPage($event)"
-              >
-                <span>&raquo;</span>
-              </a>
-            </li>
-          </ul>
+          <ng2-simple-table-pagination
+            [pages]="numberOfPages"
+            [current]="currentPage"
+            [max]="maxPages"
+            (onPageChange)="changePage($event)"
+          >
+          </ng2-simple-table-pagination>
         </nav>
       </td>
     </tr>

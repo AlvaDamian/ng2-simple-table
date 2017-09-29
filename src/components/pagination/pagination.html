@@ -1,0 +1,43 @@
+<ul [ngClass]="listClass">
+  <li [ngClass]="itemClass">
+    <a
+      href
+      [ngClass]="linkClass"
+      (click)="previousPage($event)"
+    >
+      <span>&laquo;</span>
+    </a>
+  </li>
+
+  <li
+    *ngFor="let i of pagesCollection"
+    [ngClass]="i != current ? itemClass : activeItemClass"
+  >
+
+    <a
+      href
+      [ngClass]="linkClass"
+      (click)="changePage($event, i)"
+      *ngIf="!isEllipsis(i)"
+    >
+      {{ i }}
+    </a>
+
+    <a
+      [ngClass]="linkClass"
+      *ngIf="isEllipsis(i)"
+    >
+      ...
+    </a>
+  </li>
+
+  <li [ngClass]="itemClass">
+    <a
+      href
+      [ngClass]="linkClass"
+      (click)="nextPage($event)"
+    >
+      <span>&raquo;</span>
+    </a>
+  </li>
+</ul>

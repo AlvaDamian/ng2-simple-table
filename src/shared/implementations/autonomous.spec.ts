@@ -1,5 +1,5 @@
 import { Ng2ST, Ng2STFactory } from '../';
-import { Column, Sort } from '../interfaces';
+import { Column, Sort, Filter } from '../interfaces';
 
 
 describe('Ng2ST tests', () => {
@@ -51,8 +51,8 @@ describe('Ng2ST tests', () => {
     );
 
     columns = new Array<Column>(
-      { title: 'ID', target: 'id' },
-      { title: 'Name', target: 'name' }
+      { id: 1, title: 'ID', target: 'id' },
+      { id: 2, title: 'Name', target: 'name' }
     );
 
     initialPage = 1;
@@ -65,15 +65,31 @@ describe('Ng2ST tests', () => {
     let name0 = ARGENTINE;
     let name1 = BRAZIL;
     let name2 = SPAIN;
-    let column: Column = { title: 'Name', target: 'name' };
+    let column: Column = { id: 1, title: 'Name', target: 'name' };
 
-    expect(ng2STInstance.getValue({ name: name0 }, column)).toBe(name0);
-    expect(ng2STInstance.getValue({ name: name1 }, column)).toBe(name1);
+    expect(ng2STInstance.getValue({ name: name0 }, column)).toEqual(name0);
+    expect(ng2STInstance.getValue({ name: name1 }, column)).toEqual(name1);
 
-    expect(ng2STInstance.getValue({ name: name2 }, column)).not.toBe(name0);
-    expect(ng2STInstance.getValue({ name: name2 }, column)).not.toBe(name1);
+    expect(ng2STInstance.getValue({ name: name2 }, column)).not.toEqual(name0);
+    expect(ng2STInstance.getValue({ name: name2 }, column)).not.toEqual(name1);
+  });
 
-    expect(ng2STInstance.getValue({ }, column)).toBeNull();
+  it('Should return an empty string when the column does not exists', (done) => {
+
+    let column: Column = { id: 1, title: 'example', target: 'unknown' };
+
+    expect(ng2STInstance.getValue({}, column)).toEqual('');
+    done();
+  });
+
+  it ('Should return the value for a nested object', (done) => {
+
+    let column: Column = { id: 1, title: 'Name', target: 'nested.id' };
+    let object= { nested: { id : 7 }};
+
+    expect(ng2STInstance.getValue(object, column)).toEqual(7);
+
+    done();
   });
 
   it('Should add a new sort strategy', () => {
@@ -128,7 +144,7 @@ describe('Ng2ST tests', () => {
     expect(temp).toBeNull();
   });
 
-  it('Should sort data', () => {
+  it('Should sort data', (done) => {
 
     ng2STInstance.addSortStrategy(sortTarget, sort);
     ng2STInstance.sort(sortTarget, false);
@@ -147,6 +163,7 @@ describe('Ng2ST tests', () => {
       );
 
       expect(d).toEqual(expected);
+      done();
     });
   });
 
@@ -157,15 +174,16 @@ describe('Ng2ST tests', () => {
     expect(ng2STInstance.getPage()).toEqual(initialPage);
   });
 
-  it('Should return the number of available pages', () => {
+  it('Should return the number of available pages', (done) => {
 
     ng2STInstance.addPagination(initialPage, perPage);
     let total = ng2STInstance.getNumberOfPages();
 
     expect(total).toEqual(2);
+    done();
   });
 
-  it('Should return data for the current page and not more or less', () => {
+  it('Should return data for the current page and not more or less', (done) => {
 
     ng2STInstance.addPagination(initialPage, perPage);
     ng2STInstance
@@ -196,14 +214,17 @@ describe('Ng2ST tests', () => {
         .getData()
         .then(d3 => {
           expect(d3.length).toEqual(0);
+          done();
         });
       });
     });
+
+
   });
 
   it('Should return data for the current page when ' +
-     ' a sorting strategy has been applied',
-     () => {
+     ' a sorting strategy has been applied - Part 1',
+     (done) => {
 
     ng2STInstance.addSortStrategy(sortTarget, sort);
     ng2STInstance.addPagination(initialPage, perPage);
@@ -219,18 +240,77 @@ describe('Ng2ST tests', () => {
       expect(d[1]).toEqual({ id: 5, name: SPAIN });
       expect(d[2]).toEqual({ id: 4, name: ENGLAND });
       expect(d[3]).toEqual({ id: 3, name: CHINA });
+      done();
+    });
+  });
 
+  it('Should return data for the current page when ' +
+    ' a sorting strategy has been applied - Part 2',
+    (done) => {
+
+      ng2STInstance.addSortStrategy(sortTarget, sort);
+      ng2STInstance.addPagination(initialPage, perPage);
+      ng2STInstance.sort(sortTarget, false);
       ng2STInstance.setPage(2);
 
       ng2STInstance
       .getData()
-      .then(d2 => {
+      .then(d => {
 
-        expect(d2.length).toEqual(2);
+        expect(d.length).toEqual(2);
 
-        expect(d2[0]).toEqual({ id: 2, name: BRAZIL });
-        expect(d2[1]).toEqual({ id: 1, name: ARGENTINE });
+        expect(d[0]).toEqual({ id: 2, name: BRAZIL });
+        expect(d[1]).toEqual({ id: 1, name: ARGENTINE });
+        done();
       });
+  });
+
+  it('Should add a default filter strategy', () => {
+
+    ng2STInstance.addFilter("name");
+    expect(
+      ng2STInstance
+      .hasFilter({ id: 1, title: "Name", target: "name" })
+    ).toBeTruthy();
+  });
+
+  it("Should add an specyfic filter strategy", () => {
+
+    let filter: Filter=
+      (value, input) => {
+
+        let v = String(value).toLowerCase();
+        let i = String(input).toLowerCase();
+
+        return v.indexOf(i) !== -1;
+    };
+
+    ng2STInstance.addFilter("name", filter);
+
+    expect(ng2STInstance.hasFilter({ id: 1, title: "Name", target: "name" })).toBeTruthy();
+  });
+
+  it("Should filter data", (done) => {
+
+    let filter: Filter=
+      (value, input) => {
+
+        let v = String(value).toLowerCase();
+        let i = String(input).toLowerCase();
+
+        return v.indexOf(i) !== -1;
+
+    };
+
+    ng2STInstance.addFilter("name", filter);
+    ng2STInstance.applyFilter("name", "Arg");
+
+    ng2STInstance
+    .getData()
+    .then(d => {
+      expect(d.length).toEqual(1);
+      expect(d[0]).toEqual({ id: 1, name: ARGENTINE });
+      done();
     });
   });
 });

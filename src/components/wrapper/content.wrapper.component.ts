@@ -15,8 +15,11 @@ export class ContentWrapperComponent {
   cmpRef:ComponentRef<any>;
   private isViewInitialized:boolean = false;
 
-  constructor(private componentFactoryResolver: ComponentFactoryResolver, private compiler: Compiler,
-      private cdRef:ChangeDetectorRef) {}
+  constructor(
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private compiler: Compiler,
+    private cdRef:ChangeDetectorRef
+  ) {}
 
   updateComponent() {
     if(!this.isViewInitialized) {
@@ -29,12 +32,19 @@ export class ContentWrapperComponent {
     let factory = this.componentFactoryResolver.resolveComponentFactory(this.value.component());
     this.cmpRef = this.target.createComponent(factory);
 
+    let events = this.value.events();
+
+    events.forEach(v => {
+      this.cmpRef.instance[v.name].subscribe(v.handler);
+    });
+
     let inputs = this.value.inputs();
 
     inputs
     .forEach(v => {
       this.cmpRef.instance[v.name] = v.value;
     });
+
     // to access the created instance use
     // this.compRef.instance.someProperty = 'someValue';
     // this.compRef.instance.someOutput.subscribe(val => doSomething());

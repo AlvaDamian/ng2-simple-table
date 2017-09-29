@@ -1,7 +1,10 @@
+export type Filter = (value: any, input: any) => boolean;
+
+
 /**
 * Basic filter functionality.
 */
-export interface Filter {
+//export interface Filter {
 
   /**
   * Function to use to filter data.
@@ -11,5 +14,5 @@ export interface Filter {
   *
   * @return If @value has passed the filter.
   */
-  filter: (value: any, input: any) => boolean;
-}
+  //filter: (value: any, input: any) => boolean;
+//}

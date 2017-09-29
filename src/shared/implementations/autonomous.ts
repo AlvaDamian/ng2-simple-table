@@ -17,12 +17,26 @@ export class Ng2STAutonomous extends BaseImplementation<Sort> {
     super(columns);
     this.sortStrategies = new Map<string, Sort>();
     this.onDataChange = new EventEmitter<Array<any>>();
+
+    let resolveSort = (column: Column) => {
+
+      if (column.subColumns && column.subColumns.length > 0) {
+        column
+        .subColumns
+        .forEach(c => {
+          resolveSort(c);
+        });
+      } else if (column.sort) {
+        this.addSortStrategy(column.target);
+      }
+    }
+
+    columns
+    .forEach(col => {
+      resolveSort(col);
+    });
   }
 
-  public replaceData(data: Array<any>): void {
-
-    this.data = data;
-  }
 
   public getData(): Promise<Array<any>> {
 
@@ -34,10 +48,6 @@ export class Ng2STAutonomous extends BaseImplementation<Sort> {
     }
 
     let ret: Array<any> = new Array<any>();
-
-    if (this.data.length - (page - 1) * perPage <= 0) {
-      return new Promise((resolve) => resolve(ret));
-    }
 
     ret = this.pageData(this.filterData(this.data), page, perPage);
     return new Promise((resolve) => resolve(ret));
@@ -111,7 +121,10 @@ export class Ng2STAutonomous extends BaseImplementation<Sort> {
 
     let toUse = asc ? sortStrategy.asc : sortStrategy.desc;
     this.data = this.data.sort(
-                  (arg0, arg1) => toUse(arg0[target], arg1[target])
+                  (arg0, arg1) => toUse(
+                                    this.getPropertyValue(arg0, target, ""),
+                                    this.getPropertyValue(arg1, target, "")
+                                  )
                 );
   }
 

@@ -21,26 +21,44 @@ export abstract class BaseImplementation<T> implements Ng2ST<T> {
     this.filters = new Map<string, Filter>();
     this.appliedFilters = new Map<string, any>();
 
+    let resolveDefaultColumnValues = (c: Column) => {
+      if (!c.isOptions && c.filter) {
+        this.addFilter(c.target);
+      }
+
+      if (!c.rowspan || c.rowspan <= 0) {
+        c.rowspan = 1;
+      }
+
+      if (!c.colspan || c.colspan <= 0) {
+        c.colspan = 1;
+      }
+
+      if (c.subColumns && c.subColumns.length > 0) {
+        c
+        .subColumns
+        .forEach(col => {
+          resolveDefaultColumnValues(col);
+        });
+      }
+    };
+
     this
     .columns
     .forEach(col => {
-      if (!col.isOptions && col.filter) {
-        this.addFilter(col.target);
-      }
+
+      resolveDefaultColumnValues(col);
     });
   }
 
   protected getDefaultFilter(): Filter {
 
-    return {
-      filter: (value: any, input: any) => {
+    return (value: any, input: any) => {
 
-      let v = (value as string).toLowerCase();
-      let i = (input as string).toLowerCase();
-
+      let v = String(value).toLowerCase();
+      let i = String(input).toLowerCase();
 
       return v.indexOf(i) !== -1;
-      }
     }
   }
 
@@ -91,10 +109,12 @@ export abstract class BaseImplementation<T> implements Ng2ST<T> {
           .appliedFilters
           .forEach((val, key) => {
 
+            let propertyValue = this.getPropertyValue(value, key);
+
             if (
-              this.filters.has(key)
-              && value.hasOwnProperty(key)
-              && !this.filters.get(key).filter(value[key], val)
+              propertyValue != null
+              && this.filters.has(key)
+              && !this.filters.get(key)(propertyValue, val)
             ) {
               pass = false;
             }
@@ -103,12 +123,31 @@ export abstract class BaseImplementation<T> implements Ng2ST<T> {
           return pass;
         });
 
-
     return ret;
   }
 
   protected getPerPage(): number {
     return this.perPage;
+  }
+
+  protected getPropertyValue(obj: any, prop: string, def: any = null): any {
+
+    let dotIndex = prop.indexOf('.');
+
+    if (dotIndex > 0) {
+
+      let left = prop.substring(0, dotIndex);
+      let right = prop.substring(dotIndex + 1);
+
+      if (obj.hasOwnProperty(left)) {
+
+        return this.getPropertyValue(obj[left], right, def);
+      }
+
+      return def;
+    }
+
+    return obj.hasOwnProperty(prop) ? obj[prop] : def;
   }
 
   public addFilter(target: string, filter?: Filter): void {
@@ -138,34 +177,28 @@ export abstract class BaseImplementation<T> implements Ng2ST<T> {
     this.appliedFilters.set(target, value);
   }
 
-  public getValue(obj: any, column: Column): Array<Ng2STComponent> | Array<any> | any {
+  public getValue(obj: any, column: Column): Ng2STComponent | Array<Ng2STComponent> | any {
 
     let target = column.target;
+    let propertyValue = this.getPropertyValue(obj, target, "");
 
-    if (obj.hasOwnProperty(target)) {
-
-      if (column.customValue) {
-
-        if (Array.isArray(column.customValue)) {
-
-          let ret= new Array<any>();
-
-          column
-          .customValue
-          .forEach(v => {
-            ret.push(v(obj[target], obj));
-          });
-
-          return ret;
-        } else {
-          return column.customValue(obj[target], obj);
-        }
-      }
-
-      return obj[target];
+    if (!column.customValue) {
+      return propertyValue;
     }
 
-    return null;
+    if (!Array.isArray(column.customValue)) {
+      return column.customValue(propertyValue, obj);
+    }
+
+    let ret= new Array<any>();
+
+    column
+    .customValue
+    .forEach(custom => {
+      ret.push(custom(propertyValue, obj));
+    });
+
+    return ret;
   }
 
   public getColumns(): Array<Column> {
@@ -185,5 +218,35 @@ export abstract class BaseImplementation<T> implements Ng2ST<T> {
 
     this.page = initialPage;
     this.perPage = perPage;
+  }
+
+  public changeTitle(id: number | number[], newTitle: string): void {
+
+    let resolve = (_id: number | number[], _column: Column, _newTitle: string) => {
+
+      if (!Array.isArray(_id) && _column.id == _id) {
+        _column.title = _newTitle
+        return true;
+      } else if (Array.isArray(_id) && _id.indexOf(_column.id) >= 0) {
+        _column.title = _newTitle;
+        return true;
+      } else {
+        if (_column.subColumns && _column.subColumns.length > 0) {
+          _column
+          .subColumns
+          .forEach(_c => {
+            return resolve(_id, _c, _newTitle);
+          });
+        }
+      }
+    }
+
+    this
+    .columns
+    .forEach(col => {
+      if (resolve(id, col, newTitle)) {
+        return;
+      }
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit} from '@angular/core';
+import { Component, Input, Output, OnInit, OnChanges, EventEmitter } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Column, Ng2STComponent } from '../../shared/interfaces';
 import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
@@ -8,12 +8,16 @@ import { Ng2ST, Ng2STCssConfiguration } from '../../shared';
   selector: 'ng2-simple-table',
   templateUrl: './table.component.html'
 })
-export class TableComponent implements OnInit {
+export class Ng2STTableComponent implements OnInit, OnChanges {
+
+  //events
+  @Output() onRowSelect: EventEmitter<any>;
 
   loading: boolean;
   showFilters: boolean;
   data: Array<any>;
   columns: Array<Column>;
+  header: Array<Array<Column>>;
   tableClasses: string|string[]|Set<string>;
   caretAscClasses: string|string[]|Set<string>;
   caretDescClasses: string|string[]|Set<string>;
@@ -21,11 +25,7 @@ export class TableComponent implements OnInit {
   // pagination
   currentPage: number;
   numberOfPages: number;
-  numberOfPagesRange: Array<number>;
-  paginationClass: string|string[]|Set<string>;
-  paginationItemClass: string|string[]|Set<string>;
-  paginationLinkClass: string|string[]|Set<string>;
-  paginationActiveItemClass: string|string[]|Set<string>;
+
   filterControlClasses: string | string[] | Set<string>;
 
   currentSort = {
@@ -34,23 +34,23 @@ export class TableComponent implements OnInit {
   };
 
   @Input() settings: Ng2ST<any>;
+  @Input() maxPages: number;
 
   public constructor(
     private cssConfiguration: Ng2STCssConfiguration,
     private domSanitizer: DomSanitizer
   ) {
+    this.onRowSelect = new EventEmitter<number>();
     this.loading = false;
-    this.data = new Array<any>();
-    this.columns = new Array<Column>();
+    this.data = [];
+    this.columns = [];
+    this.header= [];
     this.showFilters = false;
   }
 
   public ngOnInit(): void {
 
-    this.columns = this.settings.getColumns();
-    this.currentPage = this.settings.getPage();
     this.resolveCss();
-    this.resolveData();
 
     this.cssConfiguration.configurationChanged.subscribe(() => {
 
@@ -58,20 +58,27 @@ export class TableComponent implements OnInit {
     });
   }
 
+  public ngOnChanges(): void {
+
+    this.columns = this.settings.getColumns();
+    this.currentPage = this.settings.getPage();
+
+    let rowQuantity = this.calculateRows(this.columns);
+
+    this.header = new Array<Array<Column>>();
+    for (let i = 1; i <= rowQuantity; i++) {
+
+      this.header.push(this.resolveHeader(i, this.columns));
+    }
+
+    this.resolveData();
+  }
+
   private resolveCss(): void {
 
     this.tableClasses = this.cssConfiguration.getTable();
     this.caretAscClasses = this.cssConfiguration.getCaretAsc();
     this.caretDescClasses = this.cssConfiguration.getCaretDesc();
-    this.paginationClass = this.cssConfiguration.getPagination();
-    this.paginationItemClass = this.cssConfiguration.getPaginationItem();
-    this.paginationLinkClass = this.cssConfiguration.getPaginationLink();
-    this.paginationActiveItemClass = Ng2STCssConfiguration
-                                    .joinClasses(
-                                      this.paginationItemClass,
-                                      this.cssConfiguration
-                                      .getPaginationActiveItem()
-                                    );
 
     this.filterControlClasses = this.cssConfiguration.getFilterControl();
   }
@@ -79,16 +86,6 @@ export class TableComponent implements OnInit {
   public getValue(obj, column): any {
 
     return this.settings.getValue(obj, column);
-    /*
-    return this
-           .domSanitizer
-           .bypassSecurityTrustHtml(
-             this.settings.getValue(
-               obj,
-               column
-             )
-           );
-           */
   }
 
   public isArray(value: any): boolean {
@@ -97,10 +94,6 @@ export class TableComponent implements OnInit {
 
   public isPrimitive(value: any): boolean {
     return !(typeof value === 'object' || typeof value === 'function');
-  }
-
-  public getType(value: any) {
-    return (value as Ng2STComponent).component();
   }
 
   public canSort(col: Column): boolean {
@@ -132,30 +125,6 @@ export class TableComponent implements OnInit {
     this.resolveData();
   }
 
-  public nextPage($event): void {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    this.changeCurrentPage(this.currentPage + 1);
-  }
-
-  public previousPage($event): void {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    this.changeCurrentPage(this.currentPage - 1);
-  }
-
-  public changePage($event, pageNumber: number): void {
-
-    $event.preventDefault();
-    $event.stopPropagation();
-
-    this.changeCurrentPage(pageNumber);
-  }
-
   public addFilter($event, column: Column): boolean {
 
     let value: string = $event.target.value;
@@ -175,29 +144,40 @@ export class TableComponent implements OnInit {
     return false;
   }
 
-  private changeCurrentPage(page: number): void {
+  public changePage(page: number): void {
 
-    if (page === 0 || page > this.numberOfPages || page === this.currentPage) {
-      return;
-    }
-
-    this.currentPage = page;
-    this.settings.setPage(this.currentPage);
+    this.settings.setPage(page);
     this.resolveData();
   }
 
-  private createRange(total: number): Array<number> {
+  public emitOnRowSelect(object: any): void {
+    this.onRowSelect.emit(object);
+  }
 
-    let items = new Array<number>();
-    for (let i = 1; i <= total; i++) {
-       items.push(i);
-    }
-    return items;
+  public hasSubColumns(column: Column): boolean {
+    return column.subColumns && column.subColumns.length > 0;
+  }
+
+  public subColumns(column: Column): Array<Column> {
+    return this.hasSubColumns(column) ? column.subColumns : new Array<Column>();
+  }
+
+  public columnCount(columns = this.columns): number {
+
+    let total = 0;
+
+    columns
+    .forEach(col => {
+
+      total += !this.hasSubColumns(col) ? 1 : this.columnCount(col.subColumns);
+    });
+
+    return total;
   }
 
   private resolveData(): void {
     this.loading = true;
-    this.data = new Array<string>();
+    this.data = new Array<any>();
 
     this
     .settings
@@ -205,7 +185,6 @@ export class TableComponent implements OnInit {
     .then(d => {
       this.data = d;
       this.numberOfPages = this.settings.getNumberOfPages();
-      this.numberOfPagesRange = this.createRange(this.numberOfPages);
       this.loading = false;
     })
     .catch(e => {
@@ -213,5 +192,63 @@ export class TableComponent implements OnInit {
       this.loading = false;
       console.error('An error has ocurred while trying to fetch data: ', e);
     });
+  }
+
+  private resolveHeader(level: number, cols: Array<Column>): Array<Column> {
+
+    let ret = new Array<Column>();
+
+    cols
+    .forEach(col => {
+
+      if (level == 1) {
+        ret.push(col);
+      } else if (this.hasSubColumns(col)) {
+        ret = ret.concat(this.resolveHeader(level - 1, this.subColumns(col)));
+      }
+    });
+
+    return ret;
+  }
+
+  private calculateRows(columns: Array<Column>): number {
+
+    let total = 1;
+
+    let getTotalForColumn = (col: Column) => {
+
+      let ret = 1;
+
+      if (col.subColumns && col.subColumns.length > 0) {
+
+        let innerTotal = 1;
+
+        col
+        .subColumns
+        .forEach(subCol => {
+          let temp = getTotalForColumn(subCol);
+
+          if (temp > innerTotal) {
+            innerTotal = temp;
+          }
+        });
+
+        ret += innerTotal;
+      }
+
+      return ret;
+    }
+
+    columns
+    .forEach(c => {
+
+      let currentTotal = getTotalForColumn(c);
+
+      if (currentTotal > total) {
+        total = currentTotal;
+      }
+    });
+
+    return total;
   }
 }

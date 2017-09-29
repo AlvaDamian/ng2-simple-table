@@ -1,6 +1,10 @@
 import { Column, Filter, Pagination, Ng2STComponent } from './';
 
-
+/**
+* Core functionality.
+*
+* @type T Sort type.
+*/
 export interface Ng2ST<T> {
 
   /**
@@ -31,7 +35,7 @@ export interface Ng2ST<T> {
   *
   * @return The asked value or null if doesn't exists.
   */
-  getValue(obj: any, column: Column): Array<Ng2STComponent> | Array<any> | any;
+  getValue(obj: any, column: Column): Ng2STComponent | Array<Ng2STComponent> | any;
 
   /**
   * Gets the sort strategy used for target.
@@ -89,11 +93,44 @@ export interface Ng2ST<T> {
   */
   addPagination(initialPage: number, perPage: number): void;
 
+  /**
+  * Adds a filter for the target.
+  *
+  * @param target Object property to filter.
+  * @param filter Filter to use. If is not set, a default filter will be used.
+  */
   addFilter(target: string, filter?: Filter): void;
 
+  /**
+  * Use the given filter in @addFilter(string, ?filter) for the @target
+  * with @value
+  *
+  * @param target Object property to filter.
+  * @param value Value to use.
+  */
   applyFilter(target: string, value: any): void;
 
+  /**
+  * Remove a filter given for @target.
+  *
+  * @param target Object property.
+  */
   removeFilter(target: string): void;
 
+  /**
+  * Returns if a column has a filter that can be used.
+  *
+  * @param column The column.
+  *
+  * @return If the column has a filter that can be used or not.
+  */
   hasFilter(column: Column): boolean;
+
+  /**
+  * Sets the title @newTitle to the column that has the id @id.
+  *
+  * @param id The ID of the column.
+  * @param newTitle New title for the column.
+  */
+  changeTitle(id: number | number[], newTitle: string): void;
 }

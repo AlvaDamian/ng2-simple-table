@@ -34,19 +34,9 @@ describe('Ng2STFactory tests', () => {
     );
 
     columns = new Array<Column>(
-      { title: 'ID', target: 'id' },
-      { title: 'Name', target: 'name' }
+      { id: 1, title: 'ID', target: 'id' },
+      { id: 2, title: 'Name', target: 'name' }
     );
-
-    /*
-    actionsColumn = {
-      title: ACTIONS_INITIAL_TITLE,
-      displayOnLeft: ACTIONS_ON_LEFT_SIDE,
-      forEachRow: ACTIONS_INITIAL_FOR_EACH_ROW
-    };
-    */
-
-    tableClasses = 'table table-striped table-condensed table-bordered';
 
     ng2STBasicInstance = Ng2STFactory.createAutonomous(data, columns);
   });
